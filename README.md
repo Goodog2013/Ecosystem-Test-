@@ -48,3 +48,7 @@ git commit -m "chore: prepare release"
 git push -u origin main
 ```
 
+## Telegram bot setup
+
+- Full guide for creating and connecting your own Telegram bot:
+  - `tg_mdm/README.md` -> **Create your own Telegram bot (step-by-step)**

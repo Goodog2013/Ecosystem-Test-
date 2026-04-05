@@ -31,6 +31,44 @@ or
 node index.js
 ```
 
+## Create your own Telegram bot (step-by-step)
+
+1. Open Telegram and start chat with `@BotFather`.
+2. Run command:
+
+```text
+/newbot
+```
+
+3. Set bot name (any display name).
+4. Set bot username (must end with `bot`, for example `MyMdmBridgeBot`).
+5. BotFather returns token like:
+
+```text
+123456789:AA....
+```
+
+6. Put token into `tg_mdm/.env`:
+
+```env
+TELEGRAM_BOT_TOKEN=123456789:AA....
+```
+
+7. In `arcadia_market/backend/.env` set:
+   - `TELEGRAM_BOT_TOKEN` = same token
+   - `TELEGRAM_BOT_USERNAME` = username without `@`
+   - `TELEGRAM_BRIDGE_SECRET` = same value as in `tg_mdm/.env`
+8. Restart backend and bot:
+   - `start_game.bat` (or restart backend manually)
+   - `tg_mdm/start_tg_mdm.bat`
+9. Open MDM profile, generate Telegram link, click it and run `/start`.
+10. Verify with `/balance` in bot chat.
+
+### Important security note
+
+- Never commit real bot token to git.
+- If token leaks, immediately run `/revoke` in `@BotFather` and update `.env`.
+
 ## Commands
 
 - `/start <token>` - link Telegram to MDM account
