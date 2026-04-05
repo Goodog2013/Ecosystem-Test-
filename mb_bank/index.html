@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MB Bank</title>
+    <link rel="icon" type="image/x-icon" href="./bank.ico" />
+    <style>
+      :root {
+        --bg: #0b1421;
+        --panel: #122136;
+        --text: #e5edf8;
+        --muted: #9ab0cd;
+        --accent: #37a2ff;
+        --danger: #ff6b84;
+        --ok: #61d394;
+        --border: #2f4a6a;
+      }
+
+      body[data-theme="light"] {
+        --bg: #edf3fb;
+        --panel: #ffffff;
+        --text: #1f2f42;
+        --muted: #5b6f86;
+        --accent: #2e8ee3;
+        --danger: #d94863;
+        --ok: #1f8b5c;
+        --border: #c4d5e8;
+      }
+
+      body[data-theme="mint"] {
+        --bg: #062017;
+        --panel: #0c2f24;
+        --text: #d9f5ea;
+        --muted: #9ad4be;
+        --accent: #30c38b;
+        --danger: #ff7e9f;
+        --ok: #61d394;
+        --border: #2f6955;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: radial-gradient(circle at 15% 10%, #1a3352 0%, var(--bg) 45%),
+          radial-gradient(circle at 85% 90%, #14263f 0%, var(--bg) 50%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -24vmax;
+        pointer-events: none;
+        background:
+          radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--accent), transparent 74%) 0%, transparent 46%),
+          radial-gradient(circle at 82% 74%, color-mix(in srgb, var(--ok), transparent 76%) 0%, transparent 44%);
+        opacity: 0.72;
+        z-index: 0;
+        animation: bg-drift 16s ease-in-out infinite alternate;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: -30vmax;
+        pointer-events: none;
+        opacity: 0;
+        background: conic-gradient(
+          from 0deg,
+          rgba(91, 196, 255, 0.22),
+          rgba(143, 255, 205, 0.24),
+          rgba(127, 157, 255, 0.21),
+          rgba(91, 196, 255, 0.22)
+        );
+        transition: opacity 220ms ease;
+        z-index: 1;
+      }
+
+      body.egg-mode::after {
+        opacity: 0.7;
+        animation: egg-shift 4.8s linear infinite;
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 14px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .card {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--panel), #203955 45%), var(--panel));
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+        animation: card-in 0.28s ease-out both;
+        transition:
+          transform 180ms ease,
+          border-color 200ms ease,
+          box-shadow 240ms ease;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        left: -42%;
+        top: -160%;
+        width: 36%;
+        height: 360%;
+        pointer-events: none;
+        opacity: 0;
+        transform: rotate(18deg) translateX(0);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--accent), white 62%),
+          transparent
+        );
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--accent), var(--border) 46%);
+        box-shadow: 0 18px 34px rgba(9, 18, 31, 0.22);
+      }
+
+      .card:hover::before {
+        opacity: 0.34;
+        animation: card-sheen 1s ease-out;
+      }
+
+      .card.reveal {
+        animation: card-reveal 320ms cubic-bezier(0.18, 0.72, 0.34, 1) both;
+        animation-delay: calc(var(--reveal-index, 0) * 48ms);
+      }
+
+      body.egg-mode .card {
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent), #88e8ff 35%), 0 14px 26px rgba(18, 40, 70, 0.28);
+      }
+
+      .top {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      #bankTitle {
+        cursor: pointer;
+        user-select: none;
+        letter-spacing: 0.2px;
+        transition: letter-spacing 180ms ease, text-shadow 220ms ease, transform 200ms ease;
+      }
+
+      #bankTitle:hover {
+        letter-spacing: 0.8px;
+        transform: translateY(-1px);
+        text-shadow: 0 0 16px color-mix(in srgb, var(--accent), transparent 58%);
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      .status {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border), #294464 40%);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--bg), #0d1a2d 65%);
+        min-height: 40px;
+        padding: 8px 10px;
+      }
+
+      .status::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.28;
+        background: linear-gradient(
+          110deg,
+          transparent 0 36%,
+          color-mix(in srgb, var(--accent), transparent 82%) 50%,
+          transparent 64% 100%
+        );
+        transform: translateX(-100%);
+        animation: status-scan 6.2s linear infinite;
+      }
+
+      .status.flash-ok {
+        animation: status-flash-ok 0.38s ease-out;
+      }
+
+      .status.flash-err {
+        animation: status-flash-err 0.42s ease-out;
+      }
+
+      .ok {
+        color: #92ebba;
+      }
+
+      .err {
+        color: #ffadc0;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .c12 {
+        grid-column: span 12;
+      }
+
+      .c8 {
+        grid-column: span 8;
+      }
+
+      .c6 {
+        grid-column: span 6;
+      }
+
+      .c4 {
+        grid-column: span 4;
+      }
+
+      .c3 {
+        grid-column: span 3;
+      }
+
+      .label {
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      input,
+      select,
+      button,
+      textarea {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 9px 10px;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--border), #3a5d82 50%);
+        background: color-mix(in srgb, var(--bg), #0d1829 65%);
+        color: var(--text);
+        transition:
+          border-color 170ms ease,
+          box-shadow 200ms ease,
+          transform 170ms ease,
+          background-color 200ms ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        transform: translateY(-1px);
+        border-color: color-mix(in srgb, var(--accent), white 22%);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
+
+      button {
+        position: relative;
+        overflow: hidden;
+        padding: 9px 12px;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--accent), #2f7ccb 45%);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--accent), #9fd8ff 25%), var(--accent));
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          transform 150ms ease,
+          box-shadow 170ms ease,
+          filter 180ms ease;
+      }
+
+      button::after {
+        content: "";
+        position: absolute;
+        top: -150%;
+        left: -55%;
+        width: 42%;
+        height: 400%;
+        transform: rotate(18deg) translateX(-180%);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.56),
+          transparent
+        );
+      }
+
+      button:hover:enabled {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px color-mix(in srgb, var(--accent), transparent 70%);
+        filter: saturate(1.08);
+      }
+
+      button:hover:enabled::after {
+        animation: button-sheen 520ms ease-out;
+      }
+
+      button:active:enabled {
+        transform: translateY(1px) scale(0.992);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--accent), transparent 74%);
+      }
+
+      button.secondary {
+        border-color: color-mix(in srgb, var(--border), #4c6889 45%);
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--panel), #4a6380 35%),
+          color-mix(in srgb, var(--panel), #243b55 65%)
+        );
+      }
+
+      button.danger {
+        border-color: color-mix(in srgb, var(--danger), #d04d69 50%);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--danger), #ffc1d0 15%), var(--danger));
+      }
+
+      button.small {
+        padding: 7px 10px;
+        font-weight: 600;
+      }
+
+      .tabs {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--border), #315172 45%);
+        background: color-mix(in srgb, var(--bg), #0e1f33 60%);
+      }
+
+      .tabs button.active {
+        border-color: #5ab8ff;
+        box-shadow: 0 0 0 2px rgba(90, 184, 255, 0.2);
+        animation: tab-pulse 360ms ease-out;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .table-scroll {
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-width: 100%;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 8px 6px;
+        border-bottom: 1px solid color-mix(in srgb, var(--border), #2a4361 45%);
+        font-size: 0.88rem;
+        vertical-align: middle;
+      }
+
+      th {
+        color: color-mix(in srgb, var(--muted), #9fc2e6 35%);
+      }
+
+      tbody tr {
+        transition: transform 140ms ease, background-color 170ms ease;
+      }
+
+      tbody tr:hover {
+        transform: translateX(2px);
+      }
+
+      tbody tr:hover td {
+        background: color-mix(in srgb, var(--accent), transparent 92%);
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--border), #3b5a7d 45%);
+        background: color-mix(in srgb, var(--panel), #12243a 65%);
+        font-size: 0.78rem;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .avatar {
+        display: inline-flex;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: color-mix(in srgb, var(--accent), #ffffff 15%);
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.74rem;
+        font-weight: 700;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      .avatar.large {
+        width: 74px;
+        height: 74px;
+        margin-right: 0;
+        font-size: 1.1rem;
+      }
+
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .user-cell span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .admin-actions {
+        align-items: end;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(3, 10, 18, 0.66);
+        backdrop-filter: blur(4px);
+        z-index: 2000;
+        padding: 14px;
+        animation: backdrop-fade 180ms ease-out;
+      }
+
+      .modal-card {
+        width: min(560px, 96vw);
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--border), #395a7b 40%);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--panel), #1a304d 45%), var(--panel));
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.45);
+        padding: 14px;
+        animation: modal-pop 0.2s ease-out;
+      }
+
+      .panel-enter {
+        animation: panel-enter 280ms ease-out both;
+      }
+
+      .modal-title {
+        margin-bottom: 8px;
+      }
+
+      .modal-row {
+        margin-bottom: 8px;
+      }
+
+      .qr-scanner-box {
+        position: relative;
+        margin-top: 8px;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--border), #3a5d80 45%);
+        overflow: hidden;
+        background: #02070f;
+      }
+
+      .qr-scanner-video {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        display: block;
+        transform: scaleX(-1);
+      }
+
+      .qr-scanner-frame {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .qr-scanner-frame::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(64vw, 240px);
+        height: min(64vw, 240px);
+        transform: translate(-50%, -50%);
+        border: 2px solid color-mix(in srgb, var(--accent), #89cbff 40%);
+        border-radius: 16px;
+        box-shadow: 0 0 0 9999px rgba(2, 8, 15, 0.28);
+      }
+
+      .qr-scanner-frame::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(64vw, 240px);
+        height: 2px;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent), #b3deff 35%), transparent);
+        animation: qr-line 1.6s linear infinite;
+      }
+
+      .qr-scanner-status {
+        min-height: 20px;
+      }
+
+      .toast-wrap {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 3000;
+      }
+
+      .toast {
+        min-width: 240px;
+        max-width: 360px;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--border), #2b4767 40%);
+        background: linear-gradient(180deg, color-mix(in srgb, var(--panel), #1a2f4a 40%), var(--panel));
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 0.88rem;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        transform: translateY(8px);
+        animation: toast-in 0.2s ease-out forwards;
+      }
+
+      .toast.ok {
+        border-color: color-mix(in srgb, var(--ok), #2f8a66 45%);
+      }
+
+      .toast.err {
+        border-color: color-mix(in srgb, var(--danger), #9f3950 40%);
+      }
+
+      .tx-flash td {
+        animation: tx-flash 0.52s ease-out;
+      }
+
+      .balance-pop {
+        display: inline-block;
+        animation: balance-pop 360ms ease-out;
+      }
+
+      .fx-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 2600;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .fx-coin {
+        position: absolute;
+        left: 0;
+        top: -24px;
+        font-size: 20px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+        animation: coin-fall var(--dur, 1300ms) ease-in forwards;
+      }
+
+      body[data-theme="light"] {
+        background:
+          radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.92) 0 24%, transparent 25%),
+          radial-gradient(circle at 84% 80%, rgba(245, 250, 255, 0.85) 0 22%, transparent 23%),
+          linear-gradient(160deg, #f8fbff 0%, #eaf2fc 100%);
+      }
+
+      body[data-theme="light"]::before {
+        opacity: 0.24;
+        animation: none;
+        background:
+          radial-gradient(circle at 20% 16%, color-mix(in srgb, var(--accent), white 74%) 0%, transparent 44%),
+          radial-gradient(circle at 80% 78%, color-mix(in srgb, var(--ok), white 80%) 0%, transparent 46%);
+      }
+
+      body[data-theme="light"] .card {
+        background: linear-gradient(180deg, #ffffff, #f7fbff);
+        box-shadow: 0 10px 24px rgba(45, 70, 98, 0.08);
+      }
+
+      body[data-theme="light"] .card:hover {
+        box-shadow: 0 14px 28px rgba(45, 70, 98, 0.14);
+      }
+
+      body[data-theme="light"] .status {
+        border-color: #c7d7e9;
+        background: #f7fbff;
+      }
+
+      body[data-theme="light"] .status::before {
+        opacity: 0.16;
+      }
+
+      body[data-theme="light"] input,
+      body[data-theme="light"] select,
+      body[data-theme="light"] textarea {
+        border-color: #bfd1e6;
+        background: #ffffff;
+        color: var(--text);
+      }
+
+      body[data-theme="light"] .tabs {
+        border-color: #c7d7ea;
+        background: #f3f8ff;
+      }
+
+      body[data-theme="light"] button.secondary {
+        color: #26405d;
+        border-color: #bfd2e8;
+        background: linear-gradient(180deg, #ffffff, #eaf2fd);
+      }
+
+      body[data-theme="light"] th {
+        color: #56708b;
+      }
+
+      body[data-theme="light"] tbody tr:hover td {
+        background: color-mix(in srgb, var(--accent), white 90%);
+      }
+
+      body[data-theme="light"] .pill {
+        color: #28415e;
+        border-color: #bfd2e7;
+        background: #f3f8ff;
+      }
+
+      body[data-theme="light"] .modal-backdrop {
+        background: rgba(26, 39, 56, 0.3);
+      }
+
+      body[data-theme="light"] .modal-card {
+        border-color: #bfd2e8;
+        background: linear-gradient(180deg, #ffffff, #f2f8ff);
+        box-shadow: 0 16px 32px rgba(30, 47, 68, 0.2);
+      }
+
+      body[data-theme="light"] .toast {
+        border-color: #bfd2e8;
+        background: linear-gradient(180deg, #ffffff, #f2f8ff);
+        box-shadow: 0 12px 26px rgba(30, 47, 68, 0.16);
+      }
+
+      body[data-theme="light"] .ok {
+        color: #1d7b53;
+      }
+
+      body[data-theme="light"] .err {
+        color: #b73a52;
+      }
+
+      @keyframes toast-in {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes bg-drift {
+        0% {
+          transform: translate3d(-1.5%, -1%, 0) scale(1);
+        }
+        100% {
+          transform: translate3d(2%, 1.4%, 0) scale(1.04);
+        }
+      }
+
+      @keyframes card-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes card-reveal {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.992);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes card-sheen {
+        from {
+          transform: rotate(18deg) translateX(-220%);
+        }
+        to {
+          transform: rotate(18deg) translateX(360%);
+        }
+      }
+
+      @keyframes modal-pop {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes status-flash-ok {
+        0% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok), transparent 100%);
+        }
+        60% {
+          box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok), transparent 70%);
+        }
+        100% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok), transparent 100%);
+        }
+      }
+
+      @keyframes status-flash-err {
+        0% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger), transparent 100%);
+        }
+        60% {
+          box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger), transparent 68%);
+        }
+        100% {
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger), transparent 100%);
+        }
+      }
+
+      @keyframes tx-flash {
+        0% {
+          background-color: color-mix(in srgb, var(--accent), transparent 85%);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+
+      @keyframes balance-pop {
+        0% {
+          transform: scale(1);
+          text-shadow: 0 0 0 color-mix(in srgb, var(--accent), transparent 100%);
+        }
+        45% {
+          transform: scale(1.1);
+          text-shadow: 0 0 12px color-mix(in srgb, var(--accent), transparent 52%);
+        }
+        100% {
+          transform: scale(1);
+          text-shadow: 0 0 0 color-mix(in srgb, var(--accent), transparent 100%);
+        }
+      }
+
+      @keyframes tab-pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(90, 184, 255, 0.35);
+        }
+        100% {
+          box-shadow: 0 0 0 6px rgba(90, 184, 255, 0);
+        }
+      }
+
+      @keyframes status-scan {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      @keyframes qr-line {
+        0% {
+          transform: translate(-50%, -120px);
+          opacity: 0.65;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, 120px);
+          opacity: 0.65;
+        }
+      }
+
+      @keyframes button-sheen {
+        from {
+          transform: rotate(18deg) translateX(-180%);
+        }
+        to {
+          transform: rotate(18deg) translateX(310%);
+        }
+      }
+
+      @keyframes coin-fall {
+        from {
+          transform: translate(-50%, -20px) rotate(0deg);
+          opacity: 1;
+        }
+        to {
+          transform: translate(calc(-50% + var(--dx, 0px)), calc(100vh + 30px)) rotate(var(--rot, 520deg));
+          opacity: 0;
+        }
+      }
+
+      @keyframes egg-shift {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes backdrop-fade {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes panel-enter {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .top {
+          grid-template-columns: 1fr;
+        }
+
+        .toolbar {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .c8,
+        .c6,
+        .c4,
+        .c3 {
+          grid-column: span 12;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="night">
+    <div class="wrap">
+      <section class="card">
+        <div class="top">
+          <div>
+            <h1 id="bankTitle">MB Bank</h1>
+            <div class="meta">
+              Client IP: <span id="clientIp">-</span> |
+              Revision: <span id="revision">-</span> |
+              Updated: <span id="updatedAt">-</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div id="statusBox" class="status">Ready.</div>
+      </section>
+
+      <section id="authCard" class="card">
+        <h2 id="authTitle">Sign In / Sign Up</h2>
+        <div class="tabs">
+          <button id="tabLogin" class="small active">Sign In</button>
+          <button id="tabRegister" class="small secondary">Sign Up</button>
+        </div>
+
+        <div id="loginPanel">
+          <div class="row">
+            <div class="c6">
+              <div id="loginUsernameLabel" class="label">Username</div>
+              <input id="loginUsername" placeholder="Username" />
+            </div>
+            <div class="c6">
+              <div id="loginPasswordLabel" class="label">Password</div>
+              <input id="loginPassword" type="password" placeholder="Password" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="c12">
+              <button id="loginBtn" class="c12">Sign In</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="registerPanel" class="hidden">
+          <div class="row">
+            <div class="c6">
+              <div id="registerUsernameLabel" class="label">Username (A-Z, a-z, 0-9, _)</div>
+              <input id="registerUsername" placeholder="Username" />
+            </div>
+            <div class="c6">
+              <div id="registerPasswordLabel" class="label">Password (min 6)</div>
+              <input id="registerPassword" type="password" placeholder="Password" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="c12">
+              <button id="registerBtn" class="c12">Create Account</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="appCard" class="card hidden">
+        <div class="top" style="margin-bottom: 10px">
+          <div>
+            <h2><span id="profileTitleText">Profile</span>: <span id="meUsername">-</span></h2>
+            <div class="meta">
+              <span id="balanceLabel">Balance</span>: <span id="meBalance">0.00</span> RUB
+              | <span id="myCardLabel">Card ID</span>: <span id="meCardId">-</span>
+              <span id="meRole" class="pill hidden">buyer</span>
+            </div>
+          </div>
+          <div class="toolbar">
+            <button id="openProfileModalBtn" class="secondary">Profile</button>
+            <button id="openSettingsModalBtn" class="secondary">Settings</button>
+            <button id="logoutBtn" class="danger">Logout</button>
+          </div>
+        </div>
+
+        <h3 id="transferTitle" style="margin-bottom: 8px">Transfer</h3>
+        <div class="row">
+          <div class="c12">
+            <button id="transferBtn" class="c12">Make Transfer</button>
+          </div>
+        </div>
+
+        <section id="adminPanel" class="card hidden" style="margin-top: 10px; padding: 10px">
+          <h3 id="adminPanelTitle" style="margin-bottom: 8px">Admin Panel</h3>
+          <div class="row">
+            <div class="c6">
+              <div id="adminUserLabel" class="label">User</div>
+              <select id="adminUserSelect"></select>
+            </div>
+            <div class="c3">
+              <div id="adminAmountLabel" class="label">Amount (RUB)</div>
+              <input id="adminAddAmount" value="100.00" />
+            </div>
+            <div class="c3">
+              <div id="adminRoleLabel" class="label">Role</div>
+              <select id="adminRoleSelect">
+                <option value="buyer">buyer</option>
+                <option value="seller">seller</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="c12">
+              <div id="adminDescriptionLabel" class="label">Description</div>
+              <input id="adminTransferDescription" placeholder="Optional admin note" />
+            </div>
+          </div>
+          <div class="row admin-actions">
+            <div class="c4">
+              <button id="adminAddMoneyBtn" class="c12">Add Money</button>
+            </div>
+            <div class="c4">
+              <button id="adminSubtractMoneyBtn" class="c12 danger">Subtract Money</button>
+            </div>
+            <div class="c4">
+              <button id="openBankReserveModalBtn" class="c12 secondary">Bank Reserve</button>
+            </div>
+          </div>
+          <div class="row admin-actions">
+            <div class="c6">
+              <button id="adminSetRoleBtn" class="c12 secondary">Apply User Role</button>
+            </div>
+            <div class="c6">
+              <button id="adminClearTransfersBtn" class="c12 danger">Clear Transfers</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="usersPanel" class="hidden">
+          <h3 id="usersTitle" style="margin: 14px 0 8px">Users</h3>
+          <div class="table-scroll" style="max-height: 220px">
+            <table>
+              <thead>
+                <tr>
+                  <th id="usersHeadUser">User</th>
+                  <th id="usersHeadBalance">Balance</th>
+                  <th id="usersHeadRole">Role</th>
+                </tr>
+              </thead>
+              <tbody id="profilesTbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <h3 id="transfersTitle" style="margin: 14px 0 8px">Latest Transfers</h3>
+        <div class="table-scroll" style="max-height: 300px">
+          <table>
+            <thead>
+              <tr>
+                <th id="txHeadTime">Time</th>
+                <th id="txHeadFrom">From</th>
+                <th id="txHeadTo">To</th>
+                <th id="txHeadAmount">Amount</th>
+                <th id="txHeadStatus">Status</th>
+                <th id="txHeadDescription">Description</th>
+              </tr>
+            </thead>
+            <tbody id="transfersTbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section id="transferModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal-card">
+        <h3 id="transferModalTitle" class="modal-title">Make Transfer</h3>
+
+        <div class="tabs">
+          <button id="transferByUserTab" class="small active">By Username</button>
+          <button id="transferByCardTab" class="small secondary">By Card ID</button>
+          <button id="transferByQrTab" class="small secondary">MDM QR</button>
+        </div>
+
+        <div id="transferByUserPanel" class="modal-row">
+          <div id="toUserLabel" class="label">To user</div>
+          <select id="toUserSelect"></select>
+        </div>
+
+        <div id="transferByCardPanel" class="modal-row hidden">
+          <div id="toCardIdLabel" class="label">Card ID</div>
+          <input id="toCardIdInput" placeholder="12 digits" />
+        </div>
+
+        <div id="transferByQrPanel" class="modal-row hidden">
+          <div id="qrPayloadLabel" class="label">QR code payload</div>
+          <textarea id="qrPayloadInput" rows="3" placeholder="MDMQR:..."></textarea>
+          <div id="qrPayloadHint" class="meta" style="margin-top: 6px">
+            Paste scanned payload from MDM QR to pay instantly.
+          </div>
+          <div class="row" style="margin-top: 8px">
+            <div class="c12">
+              <button id="requestCameraAccessBtn" class="c12 secondary">Request camera access</button>
+            </div>
+            <div class="c12">
+              <button id="openQrScannerBtn" class="c12">Scan with camera</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="transferAmountRow" class="row" style="margin-top: 6px">
+          <div class="c6">
+            <div id="transferAmountLabel" class="label">Amount (RUB)</div>
+            <input id="transferAmount" value="10.00" />
+          </div>
+          <div class="c6">
+            <div id="transferDescriptionLabel" class="label">Description</div>
+            <input id="transferDescription" placeholder="Optional note" />
+          </div>
+        </div>
+
+        <div class="row admin-actions" style="margin-top: 12px">
+          <div class="c6">
+            <button id="transferSubmitBtn" class="c12">Send Transfer</button>
+          </div>
+          <div class="c6">
+            <button id="closeTransferModalBtn" class="c12 secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="qrScannerModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal-card">
+        <h3 id="qrScannerTitle" class="modal-title">Scan MDM QR</h3>
+        <p id="qrScannerSubtitle" class="meta">Point camera at QR code to pay instantly.</p>
+
+        <div class="qr-scanner-box">
+          <video id="qrScannerVideo" class="qr-scanner-video" autoplay playsinline muted></video>
+          <div class="qr-scanner-frame"></div>
+        </div>
+
+        <div id="qrScannerStatus" class="meta qr-scanner-status" style="margin-top: 8px"></div>
+
+        <div class="row admin-actions" style="margin-top: 12px">
+          <div class="c6">
+            <button id="scanQrFromFileBtn" class="c12 secondary">Scan from photo</button>
+          </div>
+          <div class="c6">
+            <button id="closeQrScannerBtn" class="c12 secondary">Close</button>
+          </div>
+        </div>
+        <input id="qrScanFileInput" type="file" accept="image/*" capture="environment" class="hidden" />
+      </div>
+    </section>
+
+    <section id="bankReserveModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal-card">
+        <h3 id="reserveModalTitle" class="modal-title">Bank Reserve (hidden account)</h3>
+        <div class="meta modal-row">
+          <span id="reserveCurrentLabel">Current amount</span>: <strong><span id="bankReserveValue">0.00</span> RUB</strong>
+        </div>
+        <div class="modal-row">
+          <div id="reserveNewLabel" class="label">New amount (RUB)</div>
+          <input id="bankReserveInput" value="0.00" />
+        </div>
+        <div class="row admin-actions" style="margin-top: 12px">
+          <div class="c6">
+            <button id="saveBankReserveBtn" class="c12">Save</button>
+          </div>
+          <div class="c6">
+            <button id="closeBankReserveModalBtn" class="c12 secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profileModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal-card">
+        <h3 id="profileModalTitle" class="modal-title">My Profile</h3>
+        <div class="row">
+          <div class="c4">
+            <div id="profileAvatarPreview" class="avatar large">?</div>
+          </div>
+          <div class="c8">
+            <div id="profileUploadAvatarLabel" class="label">Upload avatar</div>
+            <input id="profileAvatarFile" type="file" accept="image/*" />
+            <div id="profileAvatarHint" class="meta" style="margin-top: 6px">Image up to 1.5 MB.</div>
+          </div>
+        </div>
+        <div class="row admin-actions" style="margin-top: 12px">
+          <div class="c4">
+            <button id="profileRemoveAvatarBtn" class="c12 danger">Remove Avatar</button>
+          </div>
+          <div class="c4">
+            <button id="saveProfileBtn" class="c12">Save Profile</button>
+          </div>
+          <div class="c4">
+            <button id="closeProfileModalBtn" class="c12 secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="settingsModal" class="modal-backdrop hidden" aria-hidden="true">
+      <div class="modal-card">
+        <h3 id="settingsModalTitle" class="modal-title">Settings</h3>
+        <div class="modal-row">
+          <div id="settingsThemeLabel" class="label">Theme</div>
+          <select id="themeSelect">
+            <option value="night">Night</option>
+            <option value="light">Light</option>
+            <option value="mint">Mint</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <div id="settingsLanguageLabel" class="label">Language</div>
+          <select id="languageSelect">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="row admin-actions" style="margin-top: 12px">
+          <div class="c6">
+            <button id="saveSettingsBtn" class="c12">Save Settings</button>
+          </div>
+          <div class="c6">
+            <button id="closeSettingsModalBtn" class="c12 secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
+    <div id="toastContainer" class="toast-wrap"></div>
+
+    <script src="./vendor/jsQR.js"></script>
+    <script src="./web-app.js"></script>
+  </body>
+</html>

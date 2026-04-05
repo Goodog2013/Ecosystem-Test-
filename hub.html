@@ -1,0 +1,600 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Hub</title>
+  <link rel="icon" type="image/x-icon" href="./hub.ico" />
+  <style>
+    :root {
+      --bg-a: #fff3db;
+      --bg-b: #e9fff7;
+      --hub-bg-image:
+        radial-gradient(circle at 12% 14%, #ffffffc2 0 16%, transparent 34%),
+        radial-gradient(circle at 82% 28%, #ffffffe0 0 18%, transparent 36%),
+        radial-gradient(circle at 50% 86%, #ffffff80 0 20%, transparent 42%),
+        linear-gradient(150deg, var(--bg-a), var(--bg-b));
+      --hub-bg-size: 1600px 900px, 1500px 860px, 1300px 820px, cover;
+      --hub-bg-position: 10% 12%, 85% 25%, 50% 86%, center;
+      --hub-bg-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+      --card: #ffffff;
+      --text: #1e2b2a;
+      --muted: #5b6d6b;
+      --accent: #ef6a3a;
+      --accent-2: #1da889;
+      --line: #d7e5e1;
+      --modal-shadow: rgba(12, 40, 35, 0.24);
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--text);
+      position: relative;
+      isolation: isolate;
+      padding: 24px 16px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -2vmax;
+      z-index: -1;
+      background-image: var(--hub-bg-image);
+      background-size: var(--hub-bg-size);
+      background-position: var(--hub-bg-position);
+      background-repeat: var(--hub-bg-repeat);
+      transform: scale(1.03);
+      transform-origin: center;
+      pointer-events: none;
+    }
+
+    .hub-settings-btn {
+      position: fixed;
+      right: 16px;
+      top: 16px;
+      z-index: 20;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      color: #fff;
+      font-weight: 700;
+      padding: 10px 14px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+      cursor: pointer;
+    }
+
+    .wrap {
+      width: min(1100px, 96vw);
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 12px 24px rgba(12, 40, 35, 0.08);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: 0.2px;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .panel {
+      margin-top: 14px;
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+
+    .card {
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--card);
+    }
+
+    .name {
+      margin: 0;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .meta {
+      margin: 6px 0 10px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 34px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .btn.alt {
+      background: linear-gradient(90deg, #354b59, #5b7c8a);
+    }
+
+    .note {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 8px 0 0;
+    }
+
+    code {
+      background: #f2f7f5;
+      border-radius: 6px;
+      padding: 1px 5px;
+    }
+
+    .hub-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 16, 22, 0.45);
+      backdrop-filter: blur(2px);
+      display: grid;
+      place-items: center;
+      z-index: 30;
+      padding: 16px;
+      opacity: 1;
+      transition: opacity 180ms ease;
+    }
+
+    .hub-modal.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .hub-modal-card {
+      width: min(92vw, 420px);
+      border-radius: 16px;
+      border: 2px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 18px 35px var(--modal-shadow);
+      padding: 14px;
+      animation: hubPopIn 220ms ease;
+    }
+
+    @keyframes hubPopIn {
+      from { transform: translateY(10px) scale(0.95); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .hub-modal-title {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .hub-modal-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .hub-modal-grid label {
+      display: grid;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .hub-modal-grid select,
+    .hub-modal-grid input {
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font: inherit;
+      color: var(--text);
+      background: color-mix(in srgb, var(--card) 92%, white);
+    }
+
+    .hub-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .hub-modal-actions button {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font: inherit;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .hub-modal-actions .ghost {
+      background: linear-gradient(90deg, #5c6d76, #778b95);
+    }
+
+    .hub-modal-grid .hub-small {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <button id="hubSettingsBtn" class="hub-settings-btn" type="button">Настройки</button>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Project Hub</h1>
+      <p>Единая стартовая страница для нескольких проектов на одном локальном сервере.</p>
+    </section>
+
+    <section id="activeSection" class="panel">
+      <h2>Активные проекты</h2>
+      <div id="activeGrid" class="grid"></div>
+    </section>
+
+    <section id="completedSection" class="panel">
+      <h2>Завершённые проекты</h2>
+      <div id="completedGrid" class="grid"></div>
+    </section>
+  </main>
+
+  <div id="hubSettingsModal" class="hub-modal hidden" role="dialog" aria-modal="true" aria-labelledby="hubSettingsTitle">
+    <section class="hub-modal-card">
+      <h2 id="hubSettingsTitle" class="hub-modal-title">Настройки хаба</h2>
+      <div class="hub-modal-grid">
+        <label>
+          Тема
+          <select id="hubThemeSelect">
+            <option value="light">Светлая</option>
+            <option value="dark">Тёмная</option>
+          </select>
+        </label>
+        <label>
+          Акцентный цвет
+          <input id="hubAccentPicker" type="color" value="#ef6a3a" />
+        </label>
+        <label>
+          Кастомный фон
+          <input id="hubBgFileInput" type="file" accept="image/*" />
+        </label>
+        <p id="hubBgMeta" class="hub-small">Можно загрузить JPG/PNG/WebP.</p>
+      </div>
+      <div class="hub-modal-actions">
+        <button id="hubBgResetBtn" class="ghost" type="button">Сбросить фон</button>
+        <button id="hubSettingsCloseBtn" class="ghost" type="button">Закрыть</button>
+        <button id="hubSettingsSaveBtn" type="button">Сохранить</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const wrapMain = document.querySelector('main.wrap');
+    let activeGrid = document.getElementById('activeGrid');
+    let completedGrid = document.getElementById('completedGrid');
+    let activeSection = document.getElementById('activeSection');
+    let completedSection = document.getElementById('completedSection');
+    const hubSettingsBtn = document.getElementById('hubSettingsBtn');
+    const hubSettingsModal = document.getElementById('hubSettingsModal');
+    const hubThemeSelect = document.getElementById('hubThemeSelect');
+    const hubAccentPicker = document.getElementById('hubAccentPicker');
+    const hubBgFileInput = document.getElementById('hubBgFileInput');
+    const hubBgMeta = document.getElementById('hubBgMeta');
+    const hubBgResetBtn = document.getElementById('hubBgResetBtn');
+    const hubSettingsCloseBtn = document.getElementById('hubSettingsCloseBtn');
+    const hubSettingsSaveBtn = document.getElementById('hubSettingsSaveBtn');
+    const HUB_SETTINGS_KEY = 'hubSettingsV1';
+
+    function shiftHex(hex, percent) {
+      const n = String(hex || '').replace('#', '');
+      if (!/^[0-9A-Fa-f]{6}$/.test(n)) return '#1da889';
+      const r = parseInt(n.slice(0, 2), 16);
+      const g = parseInt(n.slice(2, 4), 16);
+      const b = parseInt(n.slice(4, 6), 16);
+      const f = (v) => Math.max(0, Math.min(255, Math.round(v + (percent / 100) * 255)));
+      return `#${f(r).toString(16).padStart(2, '0')}${f(g).toString(16).padStart(2, '0')}${f(b).toString(16).padStart(2, '0')}`;
+    }
+
+    function getDefaultHubSettings() {
+      return { theme: 'light', accent: '#ef6a3a', customBackground: '' };
+    }
+
+    function loadHubSettings() {
+      try {
+        const raw = localStorage.getItem(HUB_SETTINGS_KEY);
+        if (!raw) return getDefaultHubSettings();
+        const parsed = JSON.parse(raw);
+        const theme = parsed.theme === 'dark' ? 'dark' : 'light';
+        const accent = /^#[0-9A-Fa-f]{6}$/.test(parsed.accent || '') ? parsed.accent : '#ef6a3a';
+        const customBackground = typeof parsed.customBackground === 'string' ? parsed.customBackground : '';
+        return { theme, accent, customBackground };
+      } catch {
+        return getDefaultHubSettings();
+      }
+    }
+
+    function saveHubSettings(settings) {
+      localStorage.setItem(HUB_SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function applyHubTheme(settings) {
+      const dark = settings.theme === 'dark';
+      document.documentElement.style.setProperty('--bg-a', dark ? '#111a21' : '#fff3db');
+      document.documentElement.style.setProperty('--bg-b', dark ? '#18242e' : '#e9fff7');
+      document.documentElement.style.setProperty('--card', dark ? '#1e2b35' : '#ffffff');
+      document.documentElement.style.setProperty('--text', dark ? '#e7f2f4' : '#1e2b2a');
+      document.documentElement.style.setProperty('--muted', dark ? '#b7cad0' : '#5b6d6b');
+      document.documentElement.style.setProperty('--line', dark ? '#334653' : '#d7e5e1');
+      document.documentElement.style.setProperty('--modal-shadow', dark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(12, 40, 35, 0.24)');
+      document.documentElement.style.setProperty('--accent', settings.accent);
+      document.documentElement.style.setProperty('--accent-2', shiftHex(settings.accent, -24));
+      const hasCustomBg = settings.customBackground && settings.customBackground.startsWith('data:image/');
+      if (hasCustomBg) {
+        document.documentElement.style.setProperty('--hub-bg-image', `url("${settings.customBackground}")`);
+        document.documentElement.style.setProperty('--hub-bg-size', 'cover');
+        document.documentElement.style.setProperty('--hub-bg-position', 'center');
+        document.documentElement.style.setProperty('--hub-bg-repeat', 'no-repeat');
+      } else {
+        document.documentElement.style.setProperty(
+          '--hub-bg-image',
+          'radial-gradient(circle at 12% 14%, #ffffffc2 0 16%, transparent 34%), radial-gradient(circle at 82% 28%, #ffffffe0 0 18%, transparent 36%), radial-gradient(circle at 50% 86%, #ffffff80 0 20%, transparent 42%), linear-gradient(150deg, var(--bg-a), var(--bg-b))'
+        );
+        document.documentElement.style.setProperty('--hub-bg-size', '1600px 900px, 1500px 860px, 1300px 820px, cover');
+        document.documentElement.style.setProperty('--hub-bg-position', '10% 12%, 85% 25%, 50% 86%, center');
+        document.documentElement.style.setProperty('--hub-bg-repeat', 'no-repeat, no-repeat, no-repeat, no-repeat');
+      }
+      hubThemeSelect.value = settings.theme;
+      hubAccentPicker.value = settings.accent;
+      hubBgMeta.textContent = hasCustomBg
+        ? 'Кастомный фон установлен.'
+        : 'Можно загрузить JPG/PNG/WebP.';
+    }
+
+    function openHubSettings() {
+      hubSettingsModal.classList.remove('hidden');
+    }
+
+    function closeHubSettings() {
+      hubSettingsModal.classList.add('hidden');
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('read failed'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function makeCard(item) {
+      const card = document.createElement('article');
+      card.className = 'card';
+      const title = document.createElement('p');
+      title.className = 'name';
+      title.textContent = item.name || 'Без названия';
+      const meta = document.createElement('p');
+      meta.className = 'meta';
+      meta.textContent = item.description || 'Описание не задано.';
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      if (item.url) {
+        const open = document.createElement('a');
+        open.className = 'btn';
+        open.href = item.url;
+        open.textContent = 'Открыть';
+        row.appendChild(open);
+      }
+
+      if (item.path) {
+        const file = document.createElement('span');
+        file.className = 'btn alt';
+        file.textContent = item.path;
+        row.appendChild(file);
+      }
+
+      card.appendChild(title);
+      card.appendChild(meta);
+      card.appendChild(row);
+      return card;
+    }
+
+    function renderList(target, items) {
+      if (!target) return;
+      target.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'note';
+        p.textContent = 'Пока пусто.';
+        target.appendChild(p);
+        return;
+      }
+      items.forEach((item) => target.appendChild(makeCard(item)));
+    }
+
+    function ensureProjectSection(sectionId, title, gridId) {
+      let section = document.getElementById(sectionId);
+      if (!section) {
+        if (!wrapMain) return { section: null, grid: null };
+        section = document.createElement('section');
+        section.id = sectionId;
+        section.className = 'panel';
+        const h2 = document.createElement('h2');
+        h2.textContent = title;
+        const grid = document.createElement('div');
+        grid.id = gridId;
+        grid.className = 'grid';
+        section.appendChild(h2);
+        section.appendChild(grid);
+        wrapMain.appendChild(section);
+        return { section, grid };
+      }
+      let grid = section.querySelector(`#${gridId}`) || document.getElementById(gridId);
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.id = gridId;
+        grid.className = 'grid';
+        section.appendChild(grid);
+      }
+      return { section, grid };
+    }
+
+    function ensureProjectArray(items) {
+      return Array.isArray(items) ? items : [];
+    }
+
+    function defaultCompletedProjects() {
+      return [
+        {
+          name: 'Ловим Звёздочки',
+          description: 'Игра с магазином, аккаунтами и локальным онлайном по IP.',
+          url: './stars/stars.html',
+          path: 'stars/stars.html'
+        }
+      ];
+    }
+
+    function syncProjectSectionVisibility(activeItems, completedItems) {
+      const hasActive = activeItems.length > 0;
+      const hasCompleted = completedItems.length > 0;
+      if (activeSection) activeSection.style.display = hasActive ? '' : 'none';
+      if (completedSection) completedSection.style.display = hasCompleted ? '' : 'none';
+      if (!hasActive && !hasCompleted && activeSection) activeSection.style.display = '';
+    }
+
+    async function init() {
+      {
+        const ensuredActive = ensureProjectSection('activeSection', 'Активные проекты', 'activeGrid');
+        activeSection = ensuredActive.section;
+        activeGrid = ensuredActive.grid;
+        const ensuredCompleted = ensureProjectSection('completedSection', 'Завершённые проекты', 'completedGrid');
+        completedSection = ensuredCompleted.section;
+        completedGrid = ensuredCompleted.grid;
+      }
+      const settings = loadHubSettings();
+      applyHubTheme(settings);
+      const fallback = {
+        activeProjects: [],
+        completedProjects: defaultCompletedProjects()
+      };
+
+      try {
+        const response = await fetch(`./hub-data.json?v=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('hub-data.json not found');
+        const data = await response.json();
+        let activeItems = ensureProjectArray(data.activeProjects);
+        let completedItems = ensureProjectArray(data.completedProjects);
+        if (completedItems.length === 0 && activeItems.length > 0) {
+          completedItems = activeItems;
+          activeItems = [];
+        }
+        if (completedItems.length === 0) {
+          completedItems = defaultCompletedProjects();
+        }
+        renderList(activeGrid, activeItems);
+        renderList(completedGrid, completedItems);
+        syncProjectSectionVisibility(activeItems, completedItems);
+      } catch {
+        const activeItems = ensureProjectArray(fallback.activeProjects);
+        const completedItems = ensureProjectArray(fallback.completedProjects);
+        renderList(activeGrid, activeItems);
+        renderList(completedGrid, completedItems);
+        syncProjectSectionVisibility(activeItems, completedItems);
+      }
+    }
+
+    hubSettingsBtn.addEventListener('click', openHubSettings);
+    hubSettingsCloseBtn.addEventListener('click', closeHubSettings);
+    hubSettingsModal.addEventListener('click', (e) => {
+      if (e.target === hubSettingsModal) closeHubSettings();
+    });
+    hubSettingsSaveBtn.addEventListener('click', () => {
+      const saved = loadHubSettings();
+      const next = {
+        theme: hubThemeSelect.value === 'dark' ? 'dark' : 'light',
+        accent: /^#[0-9A-Fa-f]{6}$/.test(hubAccentPicker.value || '') ? hubAccentPicker.value : '#ef6a3a',
+        customBackground: saved.customBackground || ''
+      };
+      saveHubSettings(next);
+      applyHubTheme(next);
+      closeHubSettings();
+    });
+    hubBgResetBtn.addEventListener('click', () => {
+      const next = { ...loadHubSettings(), customBackground: '' };
+      saveHubSettings(next);
+      applyHubTheme(next);
+      hubBgFileInput.value = '';
+    });
+    hubBgFileInput.addEventListener('change', async () => {
+      const file = hubBgFileInput.files && hubBgFileInput.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        hubBgMeta.textContent = 'Нужен файл-изображение.';
+        hubBgFileInput.value = '';
+        return;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        if (!dataUrl.startsWith('data:image/')) throw new Error('bad image');
+        const next = { ...loadHubSettings(), customBackground: dataUrl };
+        saveHubSettings(next);
+        applyHubTheme(next);
+      } catch {
+        hubBgMeta.textContent = 'Не удалось загрузить фон.';
+      } finally {
+        hubBgFileInput.value = '';
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeHubSettings();
+    });
+
+    init();
+  </script>
+</body>
+</html>
+
+

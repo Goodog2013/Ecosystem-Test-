@@ -1,0 +1,42 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Node / frontend
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Logs / temp
+*.log
+*.tmp
+run_logs/
+
+# Local runtime data (do not publish user data)
+database.json
+hub-data.json
+userdata.json
+c.txt
+arcadia_market/backend/dev.db
+arcadia_market/backend/dev.db-shm
+arcadia_market/backend/dev.db-wal
+arcadia_market/backend/uploads/
+lan_messenger/uploads/
+lan_messenger/*.zip

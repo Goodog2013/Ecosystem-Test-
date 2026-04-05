@@ -1,0 +1,2866 @@
+﻿
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ловим Звёздочки</title>
+  <link rel="icon" type="image/x-icon" href="./star.ico" />
+  <style>
+    :root {
+      --bg1: #ffe4f1;
+      --bg2: #ffd2e7;
+      --card: #fff7fc;
+      --text: #5a2b47;
+      --accent: #ff5fa2;
+      --accent-2: #7a5cff;
+      --field-top: #fff0fa;
+      --field-mid: #ffe5f4;
+      --field-bot: #ffd5eb;
+      --basket-grad1: #ffc5df;
+      --basket-grad2: #f7b9d7;
+      --basket-border: #b86b90;
+      --basket-rim: #d58bb0;
+      --basket-glow: rgba(255, 255, 255, 0.5);
+      --ok: #41a64d;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --panel-border: color-mix(in srgb, var(--accent) 24%, white);
+      --input-bg: #ffffff;
+      --input-border: color-mix(in srgb, var(--accent) 26%, white);
+      --chip-bg: #ffffff;
+      --chip-border: color-mix(in srgb, var(--accent) 26%, white);
+      --top-bg: color-mix(in srgb, var(--card) 92%, white);
+      --top-border: color-mix(in srgb, var(--accent) 25%, white);
+      --frame-border: rgba(255, 255, 255, 0.75);
+      --muted-ui: color-mix(in srgb, var(--text) 58%, #8a8a8a);
+      --overlay-bg: rgba(255, 255, 255, 0.5);
+      --modal-backdrop: rgba(20, 14, 28, 0.45);
+      --bg-decor-1: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.75) 0 22%, transparent 23%);
+      --bg-decor-2: radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.6) 0 24%, transparent 25%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: start center;
+      padding: 20px 0 20px;
+      font-family: "Trebuchet MS", "Comic Sans MS", sans-serif;
+      color: var(--text);
+      background:
+        var(--bg-decor-1),
+        var(--bg-decor-2),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes rowFlash {
+      0% { background-color: color-mix(in srgb, var(--accent) 26%, transparent); }
+      100% { background-color: transparent; }
+    }
+
+    body.gameplay-lock {
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+
+    .game {
+      width: min(96vw, 1080px);
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: 0 18px 42px rgba(20, 10, 30, 0.16);
+      padding: 16px;
+      border: 2px solid var(--frame-border);
+      margin-top: 118px;
+      animation: fadeSlideUp 0.45s ease both;
+    }
+
+    .top {
+      position: fixed;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(96vw, 1080px);
+      z-index: 18;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: var(--top-bg);
+      border: 2px solid var(--top-border);
+      box-shadow: 0 10px 20px rgba(20, 10, 30, 0.14);
+      backdrop-filter: blur(6px);
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(24px, 3.1vw, 34px);
+      font-weight: 700;
+    }
+
+    .stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 2px solid var(--chip-border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      background: var(--chip-bg);
+    }
+
+    .profile-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .avatar-mini {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 2px solid color-mix(in srgb, var(--accent) 35%, white);
+      background: #fff;
+    }
+
+    .account-row,
+    .leaderboard,
+    .settings,
+    .shop,
+    .player {
+      border: 2px solid var(--panel-border);
+      border-radius: 16px;
+      background: var(--panel-bg);
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .row-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .leader-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .leader-table th,
+    .leader-table td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .leader-table th {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .leader-name-btn {
+      border: none;
+      background: none;
+      color: var(--text);
+      padding: 0;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: underline dotted;
+      cursor: pointer;
+    }
+
+    .leader-name-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .leader-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, white);
+      background: #fff;
+      flex: 0 0 24px;
+    }
+
+    .vote-wrap {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .vote-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .vote-like { background: linear-gradient(90deg, #22b573, #168f65); }
+    .vote-dislike { background: linear-gradient(90deg, #ff6b7d, #c74c66); }
+
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: #f2f2f2;
+    }
+
+    .status-playing { background: #d8ffe8; color: #1d7d4e; }
+    .status-online { background: #e3f1ff; color: #2b6aa6; }
+    .status-away { background: #fff3d6; color: #96641d; }
+    .status-offline { background: #ececec; color: #666; }
+
+    .account-controls,
+    .settings-grid,
+    .shop-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .account-controls {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      align-items: start;
+    }
+
+    .account-create-stack {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .account-controls button {
+      padding: 7px 10px;
+      font-size: 13px;
+      line-height: 1.2;
+      align-self: start;
+    }
+
+    @media (min-width: 981px) {
+      .account-controls > label:has(#renameAccountInput) {
+        grid-column: 4;
+      }
+
+      #renameAccountBtn {
+        grid-column: 5;
+        grid-row: 1;
+      }
+
+      #createAccountBtn {
+        grid-column: 5;
+        grid-row: 2;
+      }
+    }
+
+    .settings-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    input,
+    select,
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    input,
+    select {
+      border: 2px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text);
+    }
+
+    button {
+      cursor: pointer;
+      color: white;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+      transition: transform 0.16s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+
+    button:hover:enabled {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 40%, transparent);
+      filter: saturate(1.06);
+    }
+
+    button:active:enabled {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 28%, transparent);
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.62;
+      box-shadow: none;
+    }
+
+    .danger {
+      background: linear-gradient(90deg, #ff5f6d, #d64062);
+    }
+
+    .field {
+      margin-top: 12px;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid color-mix(in srgb, var(--accent) 28%, white);
+      background:
+        radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.55) 0 15%, transparent 16%),
+        radial-gradient(circle at 75% 65%, rgba(255, 255, 255, 0.45) 0 14%, transparent 15%),
+        linear-gradient(180deg, var(--field-top), var(--field-mid) 45%, var(--field-bot));
+      touch-action: none;
+    }
+
+    .exit-fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 6;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      line-height: 1;
+      display: none;
+    }
+
+    .exit-fullscreen-btn.show {
+      display: inline-block;
+    }
+
+    .basket {
+      position: absolute;
+      left: 0;
+      bottom: 8px;
+      width: 106px;
+      height: 54px;
+      border-radius: 0 0 32px 32px;
+      border: 4px solid var(--basket-border);
+      border-top: 9px solid var(--basket-rim);
+      background: linear-gradient(180deg, var(--basket-grad1), var(--basket-grad2));
+      box-shadow: inset 0 2px 0 var(--basket-glow), 0 6px 10px rgba(0, 0, 0, 0.14);
+      transition: transform 0.08s linear;
+      will-change: transform;
+    }
+
+    .basket::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .basket::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: -22px;
+      height: 20px;
+      border: 4px solid color-mix(in srgb, var(--basket-border) 80%, white);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      opacity: 0.85;
+    }
+
+    .star {
+      position: absolute;
+      top: -30px;
+      width: 28px;
+      height: 28px;
+      font-size: 28px;
+      line-height: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.18));
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      margin: 8px 0 0;
+      text-align: center;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      text-align: center;
+      backdrop-filter: blur(2px);
+      background: var(--overlay-bg);
+    }
+
+    .overlay.hidden { display: none; }
+
+    .panel {
+      max-width: 420px;
+      border-radius: 16px;
+      border: 2px solid var(--panel-border);
+      background: var(--panel-bg);
+      padding: 14px;
+    }
+
+    .overlay:not(.hidden) .panel {
+      animation: popIn 0.2s ease both;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      color: var(--ok);
+      font-size: 30px;
+    }
+
+    .pin-modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: var(--modal-backdrop);
+      backdrop-filter: blur(2px);
+      z-index: 20;
+      padding: 16px;
+    }
+
+    .pin-modal.hidden { display: none; }
+
+    .pin-box {
+      width: min(94vw, 420px);
+      background: var(--panel-bg);
+      border: 2px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.18);
+      display: grid;
+      gap: 8px;
+    }
+
+    .pin-box h3 {
+      margin: 0;
+      font-size: 22px;
+      color: var(--text);
+    }
+
+    .profile-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 22;
+      display: grid;
+      place-items: center;
+      background: var(--modal-backdrop);
+      backdrop-filter: blur(2px);
+      padding: 14px;
+    }
+
+    .profile-modal.hidden { display: none; }
+
+    .pin-modal:not(.hidden) .pin-box,
+    .profile-modal:not(.hidden) .profile-box {
+      animation: popIn 0.22s ease both;
+    }
+
+    .profile-box {
+      width: min(95vw, 430px);
+      background: var(--panel-bg);
+      border: 2px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.18);
+    }
+
+    .profile-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar-big {
+      width: 68px;
+      height: 68px;
+      border-radius: 999px;
+      object-fit: cover;
+      background: var(--input-bg);
+      border: 3px solid color-mix(in srgb, var(--accent) 30%, white);
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .top-hidden-space {
+      height: 96px;
+    }
+
+    .pin-box p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .pin-hint {
+      min-height: 18px;
+      font-size: 13px;
+      color: #b43d56;
+      margin: 0;
+    }
+
+    .pin-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .shop-grid {
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    }
+
+    .section-title {
+      margin: 10px 0 8px;
+      font-size: 18px;
+    }
+
+    .item {
+      border: 2px solid var(--panel-border);
+      border-radius: 14px;
+      background: var(--panel-bg);
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+      transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(20, 10, 30, 0.08);
+      border-color: color-mix(in srgb, var(--accent) 42%, white);
+    }
+
+    .leader-table tbody tr.lb-flash td {
+      animation: rowFlash 0.55s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    .item-name { margin: 0; font-weight: 700; font-size: 15px; }
+    .item-meta { margin: 0; font-size: 13px; color: var(--muted-ui); }
+
+    .basket-preview {
+      width: 62px;
+      height: 30px;
+      border-radius: 0 0 16px 16px;
+      border-style: solid;
+      border-width: 3px;
+      border-top-width: 6px;
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .star-preview { font-size: 26px; line-height: 1; }
+
+    .shop-message {
+      margin: 0;
+      min-height: 22px;
+      font-weight: 700;
+      color: color-mix(in srgb, var(--accent) 65%, #552255);
+    }
+
+    .player-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 2px solid color-mix(in srgb, var(--accent) 26%, white);
+      border-radius: 12px;
+      background: #111;
+    }
+
+    .player-note { margin: 8px 0 0; font-size: 14px; color: var(--muted-ui); }
+
+    .layout {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1.1fr 1fr;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .shop-grid { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); }
+      .game { margin-top: 148px; }
+      .top { top: 6px; padding: 8px; }
+      .top-left { width: 100%; justify-content: space-between; }
+      .top-right { width: 100%; justify-content: flex-end; }
+      .title { font-size: 23px; }
+      .chip { font-size: 13px; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <div class="top">
+      <div class="top-left">
+        <h1 class="title">Ловим Звёздочки</h1>
+      </div>
+      <div class="top-right">
+        <img id="selfAvatarMini" class="avatar-mini" alt="Аватар" />
+        <button id="selfProfileBtn" class="profile-btn">Профиль</button>
+      </div>
+      <div class="stats">
+        <div class="chip">Аккаунт: <span id="accountLabel">-</span></div>
+        <div class="chip">Очки: <span id="score">0</span></div>
+        <div class="chip">Время: <span id="time">45</span>с</div>
+        <div class="chip">Рекорд: <span id="best">0</span></div>
+        <div class="chip">Монетки: <span id="coins">0</span></div>
+      </div>
+    </div>
+    <div class="top-hidden-space"></div>
+
+    <section class="account-row">
+      <h2 class="row-title">Аккаунты</h2>
+      <div class="account-controls">
+        <label>
+          Выбрать аккаунт
+          <select id="accountSelect"></select>
+        </label>
+        <div class="account-create-stack">
+          <label>
+            Новый аккаунт
+            <input id="accountInput" type="text" maxlength="18" placeholder="Например: Alina" />
+          </label>
+          <label>
+            PIN (опционально)
+            <input id="accountPinInput" type="password" maxlength="12" placeholder="4-12 символов" />
+          </label>
+        </div>
+        <label>
+          Переименовать текущий
+          <input id="renameAccountInput" type="text" maxlength="18" placeholder="Новое имя" />
+        </label>
+        <button id="createAccountBtn">Создать</button>
+        <button id="renameAccountBtn">Переименовать</button>
+        <button id="deleteAccountBtn" class="danger">Удалить текущий</button>
+      </div>
+    </section>
+
+    <section class="leaderboard">
+      <h2 class="row-title">Таблица лидеров</h2>
+      <table class="leader-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Аккаунт</th>
+            <th>Рекорд</th>
+            <th>Монетки</th>
+            <th>Статус</th>
+            <th>Реакции</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody"></tbody>
+      </table>
+    </section>
+
+    <section id="field" class="field" aria-label="Игровое поле">
+      <button id="exitFullscreenBtn" class="exit-fullscreen-btn">Выйти из полного</button>
+      <div id="basket" class="basket" aria-hidden="true"></div>
+      <div id="overlay" class="overlay">
+        <div class="panel">
+          <h2>Готов(а)?</h2>
+          <p>Лови звёздочки. Мышка двигает корзину только при зажатой ЛКМ.</p>
+          <button id="startBtn">Начать игру</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button id="restartBtn">Играть снова</button>
+      <button id="fullscreenBtn">Полный экран</button>
+    </div>
+    <p id="hintText" class="hint">Подсказка: 🌟 даёт 3 очка, ⭐ - 1.</p>
+
+    <div class="layout">
+      <section class="shop">
+        <h2 class="row-title">Магазин</h2>
+        <p id="shopMessage" class="shop-message"></p>
+
+        <h3 class="section-title">Корзинки</h3>
+        <div id="basketShop" class="shop-grid"></div>
+
+        <h3 class="section-title">Скины падающих звезд</h3>
+        <div id="starShop" class="shop-grid"></div>
+
+        <h3 class="section-title">Скины поля</h3>
+        <div id="fieldShop" class="shop-grid"></div>
+
+        <h3 class="section-title">Особое</h3>
+        <div class="shop-grid">
+          <article class="item">
+            <p class="item-name">Свой фон поля</p>
+            <p id="customBgMeta" class="item-meta">Загрузи своё изображение за 100 монет.</p>
+            <button id="uploadBgBtn">Загрузить фон (100)</button>
+            <button id="clearBgBtn" class="danger">Убрать свой фон</button>
+            <input id="customBgFileInput" type="file" accept="image/*" hidden />
+          </article>
+        </div>
+
+        <h3 class="section-title">Мультики</h3>
+        <div id="cartoonShop" class="shop-grid"></div>
+      </section>
+
+      <div>
+        <section id="playerSection" class="player">
+          <h2 class="row-title">Плеер мультика</h2>
+          <iframe
+            id="cartoonPlayer"
+            class="player-frame"
+            src=""
+            title="Плеер мультика"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+          <p id="playerNote" class="player-note">Купи мультик в магазине и нажми "Смотреть".</p>
+          <p class="player-note"><a id="playerOpenLink" href="#" target="_blank" rel="noopener noreferrer">Открыть на YouTube</a></p>
+        </section>
+
+        <section class="settings">
+          <h2 class="row-title">Настройки</h2>
+          <div class="settings-grid">
+            <label>
+              Режим
+              <select id="themeModeSelect">
+                <option value="light">Светлая</option>
+                <option value="dark">Тёмная</option>
+              </select>
+            </label>
+            <label>
+              Под-тема
+              <select id="themeSelect"></select>
+            </label>
+            <label>
+              Акцентный цвет
+              <input id="accentPicker" type="color" value="#ff5fa2" />
+            </label>
+            <label>
+              Сложность: <span id="difficultyLabel">1</span>
+              <input id="difficultyRange" type="range" min="1" max="6" step="1" value="1" />
+            </label>
+            <label>
+              Громкость музыки
+              <input id="musicVolumeRange" type="range" min="0" max="100" step="1" value="55" />
+            </label>
+            <label>
+              <span>Музыка в игре</span>
+              <input id="musicToggle" type="checkbox" checked />
+            </label>
+            <p id="musicTrackInfo" class="player-note">Сейчас трек: 1/3</p>
+            <button id="saveThemeBtn">Сохранить настройки</button>
+            <button id="setPinBtn">Установить/сменить PIN</button>
+            <button id="removePinBtn" class="danger">Снять PIN</button>
+            <label>
+              <span>Только детские мультики</span>
+              <input id="kidFilterToggle" type="checkbox" />
+            </label>
+            <button id="exportBtn">Экспорт аккаунта</button>
+            <button id="importBtn">Импорт аккаунта</button>
+            <button id="resetProgressBtn" class="danger">Стереть прогресс аккаунта</button>
+            <input id="importFileInput" type="file" accept="application/json" hidden />
+          </div>
+          <p class="player-note">Music: bensound.com</p>
+          <p class="player-note">Artist: Aventure</p>
+          <p class="player-note">License: A1NXD6WPS6TJUTAR, OBTXE1YX3NQ8ABRV, D60VJBZ1E3C0JTIB</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="pinModal" class="pin-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pinModalTitle">
+    <div class="pin-box">
+      <h3 id="pinModalTitle">PIN</h3>
+      <p id="pinModalText"></p>
+      <input id="pinModalInput" type="password" maxlength="12" placeholder="PIN" />
+      <p id="pinModalHint" class="pin-hint"></p>
+      <div class="pin-actions">
+        <button id="pinModalCancelBtn" class="danger">Отмена</button>
+        <button id="pinModalConfirmBtn">Подтвердить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="selfProfileModal" class="profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="selfProfileTitle">
+    <div class="profile-box">
+      <h3 id="selfProfileTitle">Мой профиль</h3>
+      <div class="profile-head">
+        <img id="selfAvatarPreview" class="avatar-big" alt="Мой аватар" />
+        <div>
+          <p id="selfProfileName" class="item-name"></p>
+          <p id="selfProfileMeta" class="item-meta"></p>
+        </div>
+      </div>
+      <label>
+        Аватар
+        <input id="selfAvatarInput" type="file" accept="image/*" />
+      </label>
+      <label>
+        <span>Авто-статус</span>
+        <input id="selfAutoStatusToggle" type="checkbox" checked />
+      </label>
+      <label>
+        Ручной статус
+        <select id="selfManualStatusSelect">
+          <option value="online">Онлайн</option>
+          <option value="away">Отошёл</option>
+          <option value="offline">Не в сети</option>
+        </select>
+      </label>
+      <div class="profile-actions">
+        <button id="selfProfileCloseBtn" class="danger">Закрыть</button>
+        <button id="selfProfileSaveBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="otherProfileModal" class="profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="otherProfileTitle">
+    <div class="profile-box">
+      <h3 id="otherProfileTitle">Профиль игрока</h3>
+      <div class="profile-head">
+        <img id="otherAvatarPreview" class="avatar-big" alt="Аватар игрока" />
+        <div>
+          <p id="otherProfileName" class="item-name"></p>
+          <p id="otherProfileStatus" class="item-meta"></p>
+        </div>
+      </div>
+      <p id="otherProfileStats" class="item-meta"></p>
+      <div class="profile-actions">
+        <button id="otherProfileCloseBtn" class="danger">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_THEMES = {
+      pink: { name: 'Розовая', bg1: '#ffe4f1', bg2: '#ffd2e7', card: '#fff7fc', text: '#5a2b47' },
+      sky: { name: 'Небесная', bg1: '#dff3ff', bg2: '#c6e6ff', card: '#f5fbff', text: '#1f3d5f' },
+      mint: { name: 'Мятная', bg1: '#dcffee', bg2: '#c4f5df', card: '#f4fff9', text: '#1f4e3e' },
+      sunset: { name: 'Закат', bg1: '#ffe7d2', bg2: '#ffd2c4', card: '#fff8f2', text: '#5a3728' },
+      violet: { name: 'Лавандовая', bg1: '#ece5ff', bg2: '#ddd0ff', card: '#fbf8ff', text: '#3b2c67' },
+      ocean_boy: { name: 'Океан (мальчики)', bg1: '#d9eeff', bg2: '#bfdfff', card: '#f3f9ff', text: '#123a62' },
+      steel_boy: { name: 'Сталь (мальчики)', bg1: '#dce3ea', bg2: '#c6d0da', card: '#f6f9fc', text: '#253446' },
+      forest_boy: { name: 'Хвоя (мальчики)', bg1: '#d7f0df', bg2: '#bfdfcf', card: '#f2fbf6', text: '#1f4a36' }
+    };
+    let THEMES = { ...BASE_THEMES };
+
+    let BASKETS = [
+      { id: 'rose', name: 'Розовая классика', price: 0, grad1: '#ffc5df', grad2: '#f7b9d7', border: '#b86b90', rim: '#d58bb0' },
+      { id: 'ruby', name: 'Рубин', price: 18, grad1: '#ff9ab0', grad2: '#f06784', border: '#9e3552', rim: '#d64f6e' },
+      { id: 'sun', name: 'Солнце', price: 20, grad1: '#ffe48c', grad2: '#f8c74f', border: '#b88824', rim: '#db9f2a' },
+      { id: 'lime', name: 'Лайм', price: 20, grad1: '#d8f89e', grad2: '#b2e95f', border: '#658e2b', rim: '#8fbb3f' },
+      { id: 'mint', name: 'Мята', price: 22, grad1: '#bdf4df', grad2: '#80d8b6', border: '#2f8f69', rim: '#5eb994' },
+      { id: 'ocean', name: 'Океан', price: 24, grad1: '#9eddff', grad2: '#60bff2', border: '#2e6e99', rim: '#4f8fc0' },
+      { id: 'violet', name: 'Фиалка', price: 24, grad1: '#d2b9ff', grad2: '#ab82f4', border: '#6540ad', rim: '#845dd1' },
+      { id: 'mono', name: 'Серебро', price: 28, grad1: '#f1f4f7', grad2: '#c8d0da', border: '#6f7d8b', rim: '#9ca8b6' }
+    ];
+
+    const BASE_STAR_SKINS = [
+      { id: 'classic', name: 'Классика', price: 0, normal: '⭐', special: '🌟' },
+      { id: 'hearts', name: 'Сердечки', price: 18, normal: '💖', special: '💝' },
+      { id: 'flowers', name: 'Цветочки', price: 20, normal: '🌸', special: '🌺' },
+      { id: 'candies', name: 'Конфетки', price: 22, normal: '🍬', special: '🍭' },
+      { id: 'gems', name: 'Кристаллы', price: 24, normal: '💎', special: '🔮' },
+      { id: 'fruits', name: 'Фрукты', price: 24, normal: '🍓', special: '🍒' },
+      { id: 'bows', name: 'Бантики', price: 26, normal: '🎀', special: '👑' }
+    ];
+    let STAR_SKINS = BASE_STAR_SKINS.map((item) => ({ ...item }));
+
+    let FIELD_SKINS = [
+      { id: 'blush', name: 'Розовое небо', price: 0, top: '#fff0fa', mid: '#ffe5f4', bot: '#ffd5eb' },
+      { id: 'morning', name: 'Утро', price: 14, top: '#fff5cf', mid: '#ffe7ad', bot: '#ffd38a' },
+      { id: 'lagoon', name: 'Лагуна', price: 16, top: '#dcf6ff', mid: '#c7ebff', bot: '#a8ddff' },
+      { id: 'forest', name: 'Лес', price: 18, top: '#e8ffe1', mid: '#cbf7bc', bot: '#a2e28c' },
+      { id: 'night', name: 'Ночная', price: 22, top: '#e7e7ff', mid: '#d5d0ff', bot: '#b7acff' }
+    ];
+
+    let CARTOONS = [
+      {
+        id: 'masha',
+        name: 'Маша и Медведь',
+        price: 14,
+        kid: true,
+        listId: 'PLXnIohISHNIv3jmp-oGl8bqMUNwf6fWW2',
+        open: 'https://www.youtube.com/playlist?list=PLXnIohISHNIv3jmp-oGl8bqMUNwf6fWW2'
+      },
+      {
+        id: 'fixiki',
+        name: 'Фиксики',
+        price: 14,
+        kid: true,
+        listId: 'PL0C60546EB06D619A',
+        open: 'https://www.youtube.com/playlist?list=PL0C60546EB06D619A'
+      },
+      {
+        id: 'pony',
+        name: 'My Little Pony',
+        price: 18,
+        kid: true,
+        listId: 'PLvkFq8b7XYTrvnSnDblUBm79WcJBl3FJ',
+        open: 'https://www.youtube.com/playlist?list=PLvkFq8b7XYTrvnSnDblUBm79WcJBl3FJ'
+      },
+      {
+        id: 'peppa',
+        name: 'Свинка Пеппа',
+        price: 16,
+        kid: true,
+        listId: 'PLKtBoDIM5r2V-E0EiCLX-m_CC0inA8KoG',
+        open: 'https://www.youtube.com/playlist?list=PLKtBoDIM5r2V-E0EiCLX-m_CC0inA8KoG'
+      }
+    ];
+
+    const DATABASE_API = '/api/database';
+    const GAME_DATA_SAVE_API = '/api/game-data';
+    const PRESENCE_API = '/api/presence';
+    const LEADERBOARD_API = '/api/leaderboard';
+    const DELETE_ACCOUNT_API = '/api/delete-account';
+    const LEADERBOARD_REACT_API = '/api/leaderboard-react';
+    const LEADERBOARD_POLL_MS = 400;
+    const PRESENCE_HEARTBEAT_MS = 6000;
+    const DEFAULT_AVATAR_DATA_URL = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2240%22 y=%2248%22 text-anchor=%22middle%22 font-size=%2232%22%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+    const EVENT_INTERVAL_SECONDS = 15 * 60;
+    const BASE_FRAME_MS = 16.67;
+    const MAX_STARS_ON_FIELD = 26;
+    let GAME_TIME = 45;
+    const MUSIC_TRACKS = [
+      './gdata/music/1.mp3',
+      './gdata/music/2.mp3',
+      './gdata/music/3.mp3'
+    ];
+
+    const field = document.getElementById('field');
+    const basket = document.getElementById('basket');
+    const overlay = document.getElementById('overlay');
+    const scoreEl = document.getElementById('score');
+    const timeEl = document.getElementById('time');
+    const bestEl = document.getElementById('best');
+    const coinsEl = document.getElementById('coins');
+    const accountLabelEl = document.getElementById('accountLabel');
+    const accountSelect = document.getElementById('accountSelect');
+    const accountInput = document.getElementById('accountInput');
+    const accountPinInput = document.getElementById('accountPinInput');
+    const renameAccountInput = document.getElementById('renameAccountInput');
+    const leaderboardBody = document.getElementById('leaderboardBody');
+    const createAccountBtn = document.getElementById('createAccountBtn');
+    const renameAccountBtn = document.getElementById('renameAccountBtn');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+    const selfProfileBtn = document.getElementById('selfProfileBtn');
+    const selfAvatarMini = document.getElementById('selfAvatarMini');
+    const basketShopEl = document.getElementById('basketShop');
+    const starShopEl = document.getElementById('starShop');
+    const fieldShopEl = document.getElementById('fieldShop');
+    const cartoonShopEl = document.getElementById('cartoonShop');
+    const shopMessageEl = document.getElementById('shopMessage');
+    const hintText = document.getElementById('hintText');
+    const customBgMeta = document.getElementById('customBgMeta');
+    const uploadBgBtn = document.getElementById('uploadBgBtn');
+    const clearBgBtn = document.getElementById('clearBgBtn');
+    const customBgFileInput = document.getElementById('customBgFileInput');
+    const cartoonPlayer = document.getElementById('cartoonPlayer');
+    const playerSection = document.getElementById('playerSection');
+    const playerNote = document.getElementById('playerNote');
+    const playerOpenLink = document.getElementById('playerOpenLink');
+    const themeModeSelect = document.getElementById('themeModeSelect');
+    const themeSelect = document.getElementById('themeSelect');
+    const accentPicker = document.getElementById('accentPicker');
+    const difficultyRange = document.getElementById('difficultyRange');
+    const difficultyLabel = document.getElementById('difficultyLabel');
+    const musicToggle = document.getElementById('musicToggle');
+    const musicVolumeRange = document.getElementById('musicVolumeRange');
+    const musicTrackInfo = document.getElementById('musicTrackInfo');
+    const saveThemeBtn = document.getElementById('saveThemeBtn');
+    const setPinBtn = document.getElementById('setPinBtn');
+    const removePinBtn = document.getElementById('removePinBtn');
+    const kidFilterToggle = document.getElementById('kidFilterToggle');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFileInput = document.getElementById('importFileInput');
+    const resetProgressBtn = document.getElementById('resetProgressBtn');
+    const pinModal = document.getElementById('pinModal');
+    const pinModalTitle = document.getElementById('pinModalTitle');
+    const pinModalText = document.getElementById('pinModalText');
+    const pinModalInput = document.getElementById('pinModalInput');
+    const pinModalHint = document.getElementById('pinModalHint');
+    const pinModalCancelBtn = document.getElementById('pinModalCancelBtn');
+    const pinModalConfirmBtn = document.getElementById('pinModalConfirmBtn');
+    const selfProfileModal = document.getElementById('selfProfileModal');
+    const selfAvatarPreview = document.getElementById('selfAvatarPreview');
+    const selfProfileName = document.getElementById('selfProfileName');
+    const selfProfileMeta = document.getElementById('selfProfileMeta');
+    const selfAvatarInput = document.getElementById('selfAvatarInput');
+    const selfAutoStatusToggle = document.getElementById('selfAutoStatusToggle');
+    const selfManualStatusSelect = document.getElementById('selfManualStatusSelect');
+    const selfProfileCloseBtn = document.getElementById('selfProfileCloseBtn');
+    const selfProfileSaveBtn = document.getElementById('selfProfileSaveBtn');
+    const otherProfileModal = document.getElementById('otherProfileModal');
+    const otherAvatarPreview = document.getElementById('otherAvatarPreview');
+    const otherProfileName = document.getElementById('otherProfileName');
+    const otherProfileStatus = document.getElementById('otherProfileStatus');
+    const otherProfileStats = document.getElementById('otherProfileStats');
+    const otherProfileCloseBtn = document.getElementById('otherProfileCloseBtn');
+
+    let accounts = {};
+    let currentAccountName = '';
+    let profile = null;
+    let databaseState = null;
+    let saveQueued = false;
+    let score = 0;
+    let timeLeft = GAME_TIME;
+    let running = false;
+    let basketX = 0;
+    let mouseHoldMove = false;
+    let timerInt = null;
+    let spawnerInt = null;
+    let progressSaveCounter = 0;
+    let pinModalResolver = null;
+    let leaderboardPollTimer = null;
+    let leaderboardFetchInFlight = false;
+    let presencePushInFlight = false;
+    let presencePushPending = false;
+    let presenceHeartbeatTimer = null;
+    let leaderboardRowsCache = [];
+    let pendingSelfAvatarData = '';
+    let audioCtx = null;
+    let bgMusic = null;
+    let currentMusicIndex = 0;
+    
+    function updateDifficultyControlState() {
+      difficultyRange.disabled = running;
+    }
+
+    function updateRunInteractionLocks() {
+      document.body.classList.toggle('gameplay-lock', running);
+    }
+
+    function updateFullscreenBtnLabel() {
+      const active = document.fullscreenElement === field;
+      fullscreenBtn.textContent = active ? 'Выйти из полного' : 'Полный экран';
+      exitFullscreenBtn.classList.toggle('show', active);
+    }
+
+    async function enterFullscreenMode() {
+      if (!document.fullscreenElement && field.requestFullscreen) {
+        try {
+          await field.requestFullscreen();
+        } catch {}
+      }
+      updateFullscreenBtnLabel();
+    }
+
+    async function toggleFullscreenMode() {
+      if (document.fullscreenElement === field && document.exitFullscreen) {
+        try {
+          await document.exitFullscreen();
+        } catch {}
+      } else {
+        await enterFullscreenMode();
+      }
+      updateFullscreenBtnLabel();
+    }
+
+    function toThemeMap(themeList) {
+      const map = {};
+      themeList.forEach((item) => {
+        if (!item?.id) return;
+        map[item.id] = {
+          name: String(item.name || item.id),
+          bg1: String(item.bg1 || '#ffe4f1'),
+          bg2: String(item.bg2 || '#ffd2e7'),
+          card: String(item.card || '#fff7fc'),
+          text: String(item.text || '#5a2b47')
+        };
+      });
+      return map;
+    }
+
+    let cp1251ReverseMap = null;
+
+    function getCp1251ReverseMap() {
+      if (cp1251ReverseMap) return cp1251ReverseMap;
+      const map = {};
+      const decoder1251 = new TextDecoder('windows-1251');
+      for (let i = 0; i <= 255; i += 1) {
+        const ch = decoder1251.decode(new Uint8Array([i]));
+        if (!(ch in map)) map[ch] = i;
+      }
+      cp1251ReverseMap = map;
+      return cp1251ReverseMap;
+    }
+
+    function repairMojibakeText(str) {
+      if (typeof str !== 'string') return str;
+      if (!/[РСЁёÐÑрсёџ]/.test(str)) return str;
+
+      const mojibakeScore = (s) => (s.match(/[РСЁёÐÑрсёџÂ]/g) || []).length;
+
+      try {
+        const reverse = getCp1251ReverseMap();
+        const bytes = [];
+        for (const ch of str) {
+          const b = reverse[ch];
+          if (typeof b !== 'number') return str;
+          bytes.push(b);
+        }
+        let decoded = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes));
+        // Some strings are double-damaged. Decode one more pass if markers remain.
+        if (/[РСЁёÐÑ]/.test(decoded)) {
+          const bytes2 = [];
+          for (const ch of decoded) {
+            const b2 = reverse[ch];
+            if (typeof b2 !== 'number') break;
+            bytes2.push(b2);
+          }
+          if (bytes2.length > 0) {
+            try {
+              decoded = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes2));
+            } catch {}
+          }
+        }
+        // Accept decoded text if it clearly reduces mojibake artifacts
+        // (important for emoji-only labels where no Cyrillic letters exist).
+        if (decoded && mojibakeScore(decoded) < mojibakeScore(str)) return decoded;
+        return str;
+      } catch {
+        return str;
+      }
+    }
+
+    function deepRepairMojibake(value) {
+      if (typeof value === 'string') return repairMojibakeText(value);
+      if (Array.isArray(value)) return value.map((item) => deepRepairMojibake(item));
+      if (value && typeof value === 'object') {
+        const out = {};
+        Object.keys(value).forEach((k) => {
+          out[k] = deepRepairMojibake(value[k]);
+        });
+        return out;
+      }
+      return value;
+    }
+
+    function isBrokenEmojiToken(value) {
+      if (typeof value !== 'string' || value.trim() === '') return true;
+      return /[A-Za-zА-Яа-яЁёÐÑРСв]/.test(value);
+    }
+
+    function sanitizeStarSkinsFromDb(list) {
+      const defaultsById = new Map(BASE_STAR_SKINS.map((item) => [item.id, item]));
+      return list.map((item) => {
+        const fallback = defaultsById.get(item.id);
+        if (!fallback) return item;
+        const out = { ...item };
+        if (isBrokenEmojiToken(out.normal)) out.normal = fallback.normal;
+        if (isBrokenEmojiToken(out.special)) out.special = fallback.special;
+        return out;
+      });
+    }
+
+    function applyConfigFromDatabase(db) {
+      const repairedDb = deepRepairMojibake(db);
+      if (Array.isArray(repairedDb.themes) && repairedDb.themes.length > 0) {
+        THEMES = { ...BASE_THEMES, ...toThemeMap(repairedDb.themes) };
+      } else {
+        THEMES = { ...BASE_THEMES };
+      }
+      if (Array.isArray(repairedDb.baskets) && repairedDb.baskets.length > 0) {
+        BASKETS = repairedDb.baskets;
+      }
+      if (Array.isArray(repairedDb.starSkins) && repairedDb.starSkins.length > 0) {
+        STAR_SKINS = sanitizeStarSkinsFromDb(repairedDb.starSkins);
+      } else {
+        STAR_SKINS = BASE_STAR_SKINS.map((item) => ({ ...item }));
+      }
+      if (Array.isArray(repairedDb.fieldSkins) && repairedDb.fieldSkins.length > 0) {
+        FIELD_SKINS = repairedDb.fieldSkins;
+      }
+      if (Array.isArray(repairedDb.cartoons) && repairedDb.cartoons.length > 0) {
+        CARTOONS = repairedDb.cartoons;
+      }
+      if (typeof repairedDb.gameTimeSeconds === 'number' && repairedDb.gameTimeSeconds > 0) {
+        GAME_TIME = Math.floor(repairedDb.gameTimeSeconds);
+      }
+    }
+
+    function defaultProfile(name) {
+      return {
+        name,
+        pin: '',
+        coins: 0,
+        best: 0,
+        playSeconds: 0,
+        timedEventsTriggered: 0,
+        avatar: '',
+        ownedBaskets: ['rose'],
+        activeBasket: 'rose',
+        ownedStars: ['classic'],
+        activeStar: 'classic',
+        ownedFields: ['blush'],
+        activeField: 'blush',
+        customFieldBackground: '',
+        ownedCartoons: [],
+        settings: {
+          themeMode: 'light',
+          theme: 'pink',
+          accent: '#ff5fa2',
+          kidOnly: false,
+          statusAuto: true,
+          manualStatus: 'online',
+          difficulty: 1,
+          musicEnabled: true,
+          musicVolume: 55
+        }
+      };
+    }
+
+    function safeOwned(list, allowed, fallback) {
+      const uniq = Array.from(new Set((Array.isArray(list) ? list : []).filter((id) => allowed.includes(id))));
+      if (uniq.length === 0 && fallback) return [fallback];
+      return uniq;
+    }
+
+    function sanitizeProfile(raw, name) {
+      const p = { ...defaultProfile(name), ...(raw || {}) };
+      p.name = name;
+      p.pin = typeof p.pin === 'string' ? p.pin.slice(0, 12) : '';
+      p.coins = Math.max(0, Number(p.coins) || 0);
+      p.best = Math.max(0, Number(p.best) || 0);
+      p.avatar = typeof p.avatar === 'string' ? p.avatar : '';
+      p.playSeconds = Math.max(0, Number(p.playSeconds) || 0);
+      p.timedEventsTriggered = Math.max(0, Number(p.timedEventsTriggered) || 0);
+      p.ownedBaskets = safeOwned(p.ownedBaskets, BASKETS.map((x) => x.id), 'rose');
+      p.ownedStars = safeOwned(p.ownedStars, STAR_SKINS.map((x) => x.id), 'classic');
+      p.ownedFields = safeOwned(p.ownedFields, FIELD_SKINS.map((x) => x.id), 'blush');
+      p.ownedCartoons = safeOwned(p.ownedCartoons, CARTOONS.map((x) => x.id));
+      p.customFieldBackground = typeof p.customFieldBackground === 'string' ? p.customFieldBackground : '';
+      if (!p.ownedBaskets.includes(p.activeBasket)) p.activeBasket = p.ownedBaskets[0];
+      if (!p.ownedStars.includes(p.activeStar)) p.activeStar = p.ownedStars[0];
+      if (!p.ownedFields.includes(p.activeField)) p.activeField = p.ownedFields[0];
+      p.settings.themeMode = p.settings?.themeMode === 'dark' ? 'dark' : 'light';
+      if (!THEMES[p.settings?.theme]) p.settings.theme = 'pink';
+      if (!/^#[0-9A-Fa-f]{6}$/.test(p.settings?.accent || '')) p.settings.accent = '#ff5fa2';
+      p.settings.kidOnly = Boolean(p.settings?.kidOnly);
+      p.settings.statusAuto = p.settings?.statusAuto !== false;
+      p.settings.manualStatus = ['online', 'away', 'offline'].includes(p.settings?.manualStatus) ? p.settings.manualStatus : 'online';
+      p.settings.difficulty = Math.max(1, Math.min(6, Number(p.settings?.difficulty) || 1));
+      p.settings.musicEnabled = p.settings?.musicEnabled !== false;
+      p.settings.musicVolume = Math.max(0, Math.min(100, Number(p.settings?.musicVolume) || 55));
+      return p;
+    }
+
+    function getThemeIdsByMode(_mode) {
+      return Object.keys(THEMES);
+    }
+
+    function renderThemeVariants(mode, selectedId) {
+      const ids = getThemeIdsByMode(mode);
+      themeSelect.innerHTML = '';
+      ids.forEach((id) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = THEMES[id].name;
+        if (id === selectedId) option.selected = true;
+        themeSelect.appendChild(option);
+      });
+      if (!ids.includes(themeSelect.value)) {
+        themeSelect.value = ids[0] || '';
+      }
+    }
+
+    function defaultDatabaseState() {
+      return {
+        gameData: {
+          currentAccount: 'Player',
+          accounts: {
+            Player: defaultProfile('Player')
+          }
+        }
+      };
+    }
+
+    async function loadDatabaseState() {
+      try {
+        const response = await fetch(DATABASE_API, { cache: 'no-store' });
+        if (!response.ok) throw new Error('api unavailable');
+        const db = await response.json();
+        applyConfigFromDatabase(db);
+        if (db && typeof db === 'object' && db.gameData && typeof db.gameData === 'object') {
+          databaseState = { gameData: db.gameData };
+        } else {
+          databaseState = defaultDatabaseState();
+        }
+      } catch {
+        databaseState = defaultDatabaseState();
+      }
+      if (!databaseState.gameData || typeof databaseState.gameData !== 'object') {
+        databaseState.gameData = defaultDatabaseState().gameData;
+      }
+      if (!databaseState.gameData.accounts || typeof databaseState.gameData.accounts !== 'object') {
+        databaseState.gameData.accounts = defaultDatabaseState().gameData.accounts;
+      }
+      if (!databaseState.gameData.currentAccount) {
+        databaseState.gameData.currentAccount = Object.keys(databaseState.gameData.accounts)[0] || 'Player';
+      }
+    }
+
+    async function saveDatabaseState() {
+      if (!databaseState) return;
+      await fetch(GAME_DATA_SAVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameData: databaseState.gameData,
+          clientState: {
+            isPlaying: running,
+            status: getSelfComputedStatus()
+          }
+        }, null, 2)
+      });
+    }
+
+    function queueDatabaseSave() {
+      if (saveQueued) return;
+      saveQueued = true;
+      setTimeout(async () => {
+        saveQueued = false;
+        try {
+          await saveDatabaseState();
+        } catch {
+          setShopMessage('Не удалось сохранить данные в database.json');
+        }
+      }, 0);
+    }
+
+    function loadAccountsFromDatabase() {
+      const data = databaseState?.gameData?.accounts || {};
+      accounts = {};
+      Object.keys(data).forEach((name) => { accounts[name] = sanitizeProfile(data[name], name); });
+      if (Object.keys(accounts).length === 0) accounts.Player = defaultProfile('Player');
+      currentAccountName = databaseState?.gameData?.currentAccount || Object.keys(accounts)[0];
+      if (!accounts[currentAccountName]) currentAccountName = Object.keys(accounts)[0];
+      profile = accounts[currentAccountName];
+      saveAccountsToDatabase();
+    }
+
+    function saveAccountsToDatabase() {
+      if (!databaseState) databaseState = defaultDatabaseState();
+      databaseState.gameData = databaseState.gameData || {};
+      databaseState.gameData.accounts = accounts;
+      databaseState.gameData.currentAccount = currentAccountName;
+      queueDatabaseSave();
+    }
+
+    async function pushPresenceNow() {
+      if (!currentAccountName || !profile) return;
+      if (presencePushInFlight) {
+        presencePushPending = true;
+        return;
+      }
+      presencePushInFlight = true;
+      let timeoutId = null;
+      try {
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 2500);
+        await fetch(PRESENCE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          signal: controller.signal,
+          body: JSON.stringify({
+            accountName: currentAccountName,
+            profile,
+            clientState: {
+              isPlaying: running,
+              status: getSelfComputedStatus()
+            }
+          })
+        });
+      } catch {
+        // Silent: next heartbeat will retry.
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+        presencePushInFlight = false;
+        if (presencePushPending) {
+          presencePushPending = false;
+          setTimeout(() => {
+            pushPresenceNow();
+          }, 0);
+        }
+      }
+    }
+
+    function startPresenceHeartbeat() {
+      if (presenceHeartbeatTimer) clearInterval(presenceHeartbeatTimer);
+      presenceHeartbeatTimer = setInterval(() => {
+        pushPresenceNow();
+      }, PRESENCE_HEARTBEAT_MS);
+    }
+
+    function refreshAccountSelect() {
+      accountSelect.innerHTML = '';
+      Object.keys(accounts).forEach((name) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        if (name === currentAccountName) option.selected = true;
+        accountSelect.appendChild(option);
+      });
+      accountLabelEl.textContent = currentAccountName;
+    }
+
+    function renderLeaderboardRows(rows) {
+      const prevRows = Array.isArray(leaderboardRowsCache) ? leaderboardRowsCache : [];
+      const prevMap = new Map(prevRows.map((r) => [r.name, r]));
+      const firstPaint = leaderboardBody.children.length === 0;
+      leaderboardRowsCache = Array.isArray(rows) ? rows : [];
+      leaderboardBody.innerHTML = '';
+      rows.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        const mark = item.name === currentAccountName ? ' (ты)' : '';
+        const sm = statusMeta(item.status);
+        const prev = prevMap.get(item.name);
+        const changed = Boolean(
+          prev &&
+          (prev.best !== item.best ||
+            prev.coins !== item.coins ||
+            prev.status !== item.status ||
+            prev.likes !== item.likes ||
+            prev.dislikes !== item.dislikes)
+        );
+        if (firstPaint) {
+          tr.style.animation = `fadeSlideUp 0.22s ease ${Math.min(idx * 35, 210)}ms both`;
+        } else if (changed) {
+          tr.classList.add('lb-flash');
+        }
+        const avatar = item.avatar && item.avatar.startsWith('data:image/') ? item.avatar : DEFAULT_AVATAR_DATA_URL;
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>
+            <span class="leader-name-wrap">
+              <img class="leader-avatar" src="${avatar}" alt="Аватар ${item.name}" />
+              <button class="leader-name-btn" data-name="${item.name}">${item.name}${mark}</button>
+            </span>
+          </td>
+          <td>${formatNumber(item.best)}</td>
+          <td>${item.coins}</td>
+          <td><span class="status-pill ${sm.cls}">${sm.text}</span></td>
+          <td>
+            <span class="vote-wrap">
+              <button class="vote-btn vote-like" data-vote="like" data-name="${item.name}">👍 ${item.likes || 0}</button>
+              <button class="vote-btn vote-dislike" data-vote="dislike" data-name="${item.name}">👎 ${item.dislikes || 0}</button>
+            </span>
+          </td>
+        `;
+        leaderboardBody.appendChild(tr);
+      });
+      if (rows.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="6">Нет данных</td>';
+        leaderboardBody.appendChild(tr);
+      }
+    }
+
+    async function renderLeaderboard() {
+      if (leaderboardFetchInFlight) return;
+      leaderboardFetchInFlight = true;
+      try {
+        const response = await fetch(LEADERBOARD_API, { cache: 'no-store' });
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data.rows)) {
+            renderLeaderboardRows(
+              data.rows
+                .map((r) => ({
+                  name: String(r.name || ''),
+                  best: Math.max(0, Number(r.best) || 0),
+                  coins: Math.max(0, Number(r.coins) || 0),
+                  likes: Math.max(0, Number(r.likes) || 0),
+                  dislikes: Math.max(0, Number(r.dislikes) || 0),
+                  status: String(r.status || 'offline'),
+                  avatar: typeof r.avatar === 'string' ? r.avatar : '',
+                  profileBest: Math.max(0, Number(r.profileBest) || 0),
+                  profileCoins: Math.max(0, Number(r.profileCoins) || 0)
+                }))
+                .slice(0, 10)
+            );
+            leaderboardFetchInFlight = false;
+            return;
+          }
+        }
+      } catch {
+        // fallback below
+      }
+
+      const rows = Object.values(accounts)
+        .map((item) => sanitizeProfile(item, item.name))
+        .map((item) => ({
+          name: item.name,
+          best: item.best,
+          coins: item.coins,
+          likes: 0,
+          dislikes: 0,
+          status: getSelfComputedStatus(),
+          avatar: item.avatar || '',
+          profileBest: item.best,
+          profileCoins: item.coins
+        }))
+        .sort((a, b) => (b.best - a.best) || (b.coins - a.coins) || a.name.localeCompare(b.name))
+        .slice(0, 10);
+      renderLeaderboardRows(rows);
+      leaderboardFetchInFlight = false;
+    }
+
+    function startLeaderboardPolling() {
+      if (leaderboardPollTimer) clearInterval(leaderboardPollTimer);
+      leaderboardPollTimer = setInterval(() => {
+        renderLeaderboard();
+      }, LEADERBOARD_POLL_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          pushPresenceNow();
+          renderLeaderboard();
+        }
+      });
+    }
+
+    function shiftHex(hex, percent) {
+      const n = hex.replace('#', '');
+      const r = parseInt(n.slice(0, 2), 16);
+      const g = parseInt(n.slice(2, 4), 16);
+      const b = parseInt(n.slice(4, 6), 16);
+      const f = (v) => Math.max(0, Math.min(255, Math.round(v + (percent / 100) * 255)));
+      return `#${f(r).toString(16).padStart(2, '0')}${f(g).toString(16).padStart(2, '0')}${f(b).toString(16).padStart(2, '0')}`;
+    }
+
+    function applyTheme() {
+      const mode = profile.settings.themeMode === 'dark' ? 'dark' : 'light';
+      if (!THEMES[profile.settings.theme]) profile.settings.theme = 'pink';
+      const rawTheme = THEMES[profile.settings.theme] || THEMES.pink;
+      const theme = mode === 'dark'
+        ? {
+            bg1: shiftHex(rawTheme.bg1, -82),
+            bg2: shiftHex(rawTheme.bg2, -84),
+            card: shiftHex(rawTheme.card, -76),
+            text: '#e8f0ff'
+          }
+        : rawTheme;
+      const accent = profile.settings.accent;
+      const accent2 = shiftHex(accent, -28);
+      document.documentElement.style.setProperty('--bg1', theme.bg1);
+      document.documentElement.style.setProperty('--bg2', theme.bg2);
+      document.documentElement.style.setProperty('--card', theme.card);
+      document.documentElement.style.setProperty('--text', theme.text);
+      document.documentElement.style.setProperty('--bg-decor-1', mode === 'dark' ? 'none' : 'radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.75) 0 22%, transparent 23%)');
+      document.documentElement.style.setProperty('--bg-decor-2', mode === 'dark' ? 'none' : 'radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.6) 0 24%, transparent 25%)');
+      if (mode === 'dark') {
+        const panelBg = shiftHex(theme.card, -4);
+        const panelBorder = shiftHex(theme.card, 20);
+        const inputBg = shiftHex(theme.bg1, 10);
+        const inputBorder = shiftHex(theme.card, 28);
+        document.documentElement.style.setProperty('--panel-bg', panelBg);
+        document.documentElement.style.setProperty('--panel-border', panelBorder);
+        document.documentElement.style.setProperty('--input-bg', inputBg);
+        document.documentElement.style.setProperty('--input-border', inputBorder);
+        document.documentElement.style.setProperty('--chip-bg', inputBg);
+        document.documentElement.style.setProperty('--chip-border', inputBorder);
+        document.documentElement.style.setProperty('--top-bg', panelBg);
+        document.documentElement.style.setProperty('--top-border', panelBorder);
+        document.documentElement.style.setProperty('--frame-border', panelBorder);
+        document.documentElement.style.setProperty('--muted-ui', '#c7d4ec');
+        document.documentElement.style.setProperty('--overlay-bg', 'rgba(8, 14, 24, 0.52)');
+        document.documentElement.style.setProperty('--modal-backdrop', 'rgba(3, 8, 18, 0.62)');
+      } else {
+        document.documentElement.style.setProperty('--panel-bg', 'rgba(255, 255, 255, 0.9)');
+        document.documentElement.style.setProperty('--panel-border', 'color-mix(in srgb, var(--accent) 24%, white)');
+        document.documentElement.style.setProperty('--input-bg', '#ffffff');
+        document.documentElement.style.setProperty('--input-border', 'color-mix(in srgb, var(--accent) 26%, white)');
+        document.documentElement.style.setProperty('--chip-bg', '#ffffff');
+        document.documentElement.style.setProperty('--chip-border', 'color-mix(in srgb, var(--accent) 26%, white)');
+        document.documentElement.style.setProperty('--top-bg', 'color-mix(in srgb, var(--card) 92%, white)');
+        document.documentElement.style.setProperty('--top-border', 'color-mix(in srgb, var(--accent) 25%, white)');
+        document.documentElement.style.setProperty('--frame-border', 'rgba(255, 255, 255, 0.75)');
+        document.documentElement.style.setProperty('--muted-ui', 'color-mix(in srgb, var(--text) 58%, #8a8a8a)');
+        document.documentElement.style.setProperty('--overlay-bg', 'rgba(255, 255, 255, 0.5)');
+        document.documentElement.style.setProperty('--modal-backdrop', 'rgba(20, 14, 28, 0.45)');
+      }
+      document.documentElement.style.setProperty('--accent', accent);
+      document.documentElement.style.setProperty('--accent-2', accent2);
+      themeModeSelect.value = mode;
+      renderThemeVariants(mode, profile.settings.theme);
+      accentPicker.value = accent;
+      kidFilterToggle.checked = Boolean(profile.settings.kidOnly);
+      difficultyRange.value = String(getDifficultyLevel());
+      difficultyLabel.textContent = String(getDifficultyLevel());
+      musicToggle.checked = profile.settings.musicEnabled !== false;
+      musicVolumeRange.value = String(Math.max(0, Math.min(100, Number(profile.settings.musicVolume) || 55)));
+    }
+
+    function applyBasketSkin() {
+      const item = BASKETS.find((x) => x.id === profile.activeBasket) || BASKETS[0];
+      document.documentElement.style.setProperty('--basket-grad1', item.grad1);
+      document.documentElement.style.setProperty('--basket-grad2', item.grad2);
+      document.documentElement.style.setProperty('--basket-border', item.border);
+      document.documentElement.style.setProperty('--basket-rim', item.rim);
+    }
+
+    function applyFieldSkin() {
+      const item = FIELD_SKINS.find((x) => x.id === profile.activeField) || FIELD_SKINS[0];
+      document.documentElement.style.setProperty('--field-top', item.top);
+      document.documentElement.style.setProperty('--field-mid', item.mid);
+      document.documentElement.style.setProperty('--field-bot', item.bot);
+      const baseLayers = [
+        'radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.55) 0 15%, transparent 16%)',
+        'radial-gradient(circle at 75% 65%, rgba(255, 255, 255, 0.45) 0 14%, transparent 15%)',
+        `linear-gradient(180deg, ${item.top}, ${item.mid} 45%, ${item.bot})`
+      ];
+      if (profile.customFieldBackground) {
+        field.style.backgroundImage = `linear-gradient(rgba(255,255,255,0.16), rgba(255,255,255,0.16)), url("${profile.customFieldBackground}"), ${baseLayers.join(', ')}`;
+        field.style.backgroundSize = 'cover, cover, auto, auto, auto';
+        field.style.backgroundPosition = 'center center, center center, 0 0, 0 0, 0 0';
+      } else {
+        field.style.backgroundImage = baseLayers.join(', ');
+        field.style.backgroundSize = '';
+        field.style.backgroundPosition = '';
+      }
+    }
+
+    function updateHintText() {
+      const skin = getCurrentStarSkin();
+      hintText.textContent = `Подсказка: ${skin.special} даёт 3 очка, ${skin.normal} - 1.`;
+    }
+
+    function refreshCustomBackgroundUi() {
+      const hasCustom = Boolean(profile.customFieldBackground);
+      customBgMeta.textContent = hasCustom
+        ? 'Свой фон установлен. Новая загрузка стоит 100 монет.'
+        : 'Загрузи своё изображение за 100 монет.';
+      clearBgBtn.disabled = !hasCustom;
+    }
+
+    function syncTopStats() {
+      scoreEl.textContent = formatNumber(score);
+      timeEl.textContent = timeLeft;
+      bestEl.textContent = formatNumber(profile.best);
+      coinsEl.textContent = profile.coins;
+      accountLabelEl.textContent = currentAccountName;
+      const avatar = profile.avatar && profile.avatar.startsWith('data:image/') ? profile.avatar : '';
+      selfAvatarMini.src = avatar || DEFAULT_AVATAR_DATA_URL;
+    }
+
+    function setShopMessage(text) { shopMessageEl.textContent = text; }
+
+    function statusMeta(status) {
+      const s = status || 'offline';
+      if (s === 'playing') return { cls: 'status-playing', text: 'играет' };
+      if (s === 'online') return { cls: 'status-online', text: 'онлайн' };
+      if (s === 'away') return { cls: 'status-away', text: 'отошёл' };
+      return { cls: 'status-offline', text: 'не в сети' };
+    }
+
+    function getSelfComputedStatus() {
+      if (running) return 'playing';
+      if (profile.settings.statusAuto) return 'online';
+      return profile.settings.manualStatus || 'online';
+    }
+
+    function formatNumber(num) {
+      const n = Number(num) || 0;
+      return Number.isInteger(n) ? String(n) : n.toFixed(1);
+    }
+
+    function getDifficultyLevel() {
+      return Math.max(1, Math.min(6, Number(profile?.settings?.difficulty) || 1));
+    }
+
+    function getScoreMultiplier() {
+      const level = getDifficultyLevel();
+      return +(0.1 * (2 ** (level - 1))).toFixed(4);
+    }
+
+    function getSpeedMultiplier() {
+      const level = getDifficultyLevel();
+      return 1 + (level - 1) * 0.12;
+    }
+
+    function getSwayAmplitude() {
+      const level = getDifficultyLevel();
+      return 4 + (level - 1) * 2.2;
+    }
+
+    function getSwayFrequency() {
+      const level = getDifficultyLevel();
+      return 0.035 + (level - 1) * 0.005;
+    }
+
+    function getRewardMultiplier() {
+      const level = getDifficultyLevel();
+      return 1 + (level - 1) * 0.2;
+    }
+
+    function applyDifficultyVisuals() {
+      const level = getDifficultyLevel();
+      const width = Math.round(106 - (level - 1) * 5);
+      const height = Math.round(54 - (level - 1) * 2);
+      basket.style.width = `${Math.max(56, width)}px`;
+      basket.style.height = `${Math.max(28, height)}px`;
+      difficultyLabel.textContent = String(level);
+    }
+
+    function ensureAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playCatchSfx(special = false) {
+      try {
+        ensureAudioContext();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = special ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(special ? 1100 : 760, now);
+        osc.frequency.exponentialRampToValueAtTime(special ? 1450 : 940, now + 0.08);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(special ? 0.22 : 0.15, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + (special ? 0.18 : 0.12));
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + (special ? 0.2 : 0.14));
+      } catch {}
+    }
+
+    function ensureMusicPlayer() {
+      if (bgMusic) return;
+      bgMusic = new Audio();
+      bgMusic.preload = 'auto';
+      bgMusic.autoplay = true;
+      bgMusic.loop = false;
+      bgMusic.addEventListener('ended', () => {
+        currentMusicIndex = (currentMusicIndex + 1) % MUSIC_TRACKS.length;
+        bgMusic.src = MUSIC_TRACKS[currentMusicIndex];
+        updateMusicTrackInfo();
+        bgMusic.play().catch(() => {});
+      });
+    }
+
+    function updateMusicTrackInfo() {
+      if (!musicTrackInfo) return;
+      const total = MUSIC_TRACKS.length;
+      const safeIndex = Math.max(0, Math.min(total - 1, currentMusicIndex));
+      musicTrackInfo.textContent = `Сейчас трек: ${safeIndex + 1}/${total}`;
+    }
+
+    function updateMusicState() {
+      ensureMusicPlayer();
+      updateMusicTrackInfo();
+      bgMusic.volume = (profile.settings.musicVolume || 0) / 100;
+      if (!profile.settings.musicEnabled) {
+        bgMusic.pause();
+        return;
+      }
+      if (!bgMusic.src) bgMusic.src = MUSIC_TRACKS[currentMusicIndex];
+      bgMusic.play().catch(() => {});
+    }
+
+    function applyTimedEventReward() {
+      const roll = Math.random();
+      if (roll < 0.4) {
+        const bonusCoins = 25;
+        profile.coins += bonusCoins;
+        setShopMessage(`Событие: Сундук удачи. +${bonusCoins} монет.`);
+        syncTopStats();
+        return;
+      }
+      if (roll < 0.75) {
+        const extraTime = 10;
+        timeLeft += extraTime;
+        setShopMessage(`Событие: Временной буст. +${extraTime} секунд.`);
+        syncTopStats();
+        return;
+      }
+      const bonusScore = 8;
+      score += bonusScore;
+      scoreEl.textContent = score;
+      setShopMessage(`Событие: Звёздный рывок. +${bonusScore} очков.`);
+      syncTopStats();
+    }
+
+    function handleTimedEventsByPlaytime() {
+      const reached = Math.floor(profile.playSeconds / EVENT_INTERVAL_SECONDS);
+      while (profile.timedEventsTriggered < reached) {
+        profile.timedEventsTriggered += 1;
+        applyTimedEventReward();
+      }
+    }
+
+    function stopGameLoops() {
+      if (timerInt) clearInterval(timerInt);
+      if (spawnerInt) clearInterval(spawnerInt);
+      timerInt = null;
+      spawnerInt = null;
+    }
+
+    function resetFieldStars() { field.querySelectorAll('.star').forEach((node) => node.remove()); }
+
+    function setBasket(x) {
+      const rect = field.getBoundingClientRect();
+      const maxX = rect.width - basket.offsetWidth;
+      basketX = Math.max(0, Math.min(x, maxX));
+      basket.style.transform = `translateX(${basketX}px)`;
+    }
+
+    function getCurrentStarSkin() { return STAR_SKINS.find((x) => x.id === profile.activeStar) || STAR_SKINS[0]; }
+
+    function getRewardByScore(points) {
+      const scoreValue = Number(points) || 0;
+      if (scoreValue >= 90) return 34;
+      if (scoreValue >= 70) return 26;
+      if (scoreValue >= 50) return 20;
+      if (scoreValue >= 30) return 14;
+      if (scoreValue >= 15) return 8;
+      return 4;
+    }
+
+    function resetGameRound() {
+      score = 0;
+      timeLeft = GAME_TIME;
+      mouseHoldMove = false;
+      resetFieldStars();
+      applyDifficultyVisuals();
+      setBasket((field.clientWidth - basket.offsetWidth) / 2);
+      syncTopStats();
+    }
+
+    function spawnStar() {
+      if (!running) return;
+      if (field.querySelectorAll('.star').length >= MAX_STARS_ON_FIELD) return;
+      const star = document.createElement('div');
+      const skin = getCurrentStarSkin();
+      const special = Math.random() < 0.2;
+      const speed = (special ? 3.3 + Math.random() * 1.2 : 2 + Math.random() * 1.3) * getSpeedMultiplier();
+      const points = (special ? 3 : 1) * getScoreMultiplier();
+      const swayAmp = getSwayAmplitude() * (special ? 1.1 : 1);
+      const swayFreq = getSwayFrequency();
+      const baseLeft = Math.random() * (field.clientWidth - 32);
+      star.className = 'star';
+      star.textContent = special ? skin.special : skin.normal;
+      star.dataset.points = String(points);
+      star.dataset.speed = String(speed);
+      star.style.left = `${baseLeft}px`;
+      field.appendChild(star);
+
+      let y = -30;
+      let tick = Math.random() * Math.PI * 2;
+      let lastTs = performance.now();
+      const fall = () => {
+        if (!running || !star.isConnected) return;
+        const now = performance.now();
+        const dt = Math.min(60, Math.max(1, now - lastTs));
+        lastTs = now;
+        y += Number(star.dataset.speed) * (dt / BASE_FRAME_MS);
+        tick += swayFreq;
+        const swayX = Math.sin(tick) * swayAmp;
+        star.style.transform = `translate(${swayX}px, ${y}px)`;
+        const starRect = star.getBoundingClientRect();
+        const basketRect = basket.getBoundingClientRect();
+        const caught =
+          starRect.bottom >= basketRect.top &&
+          starRect.top <= basketRect.bottom &&
+          starRect.right >= basketRect.left &&
+          starRect.left <= basketRect.right;
+        if (caught) {
+          score += Number(star.dataset.points);
+          scoreEl.textContent = formatNumber(score);
+          playCatchSfx(special);
+          star.remove();
+          return;
+        }
+        if (y > field.clientHeight + 34) {
+          star.remove();
+          return;
+        }
+        requestAnimationFrame(fall);
+      };
+      requestAnimationFrame(fall);
+    }
+
+    function saveCurrentProfile() {
+      accounts[currentAccountName] = sanitizeProfile(profile, currentAccountName);
+      profile = accounts[currentAccountName];
+      saveAccountsToDatabase();
+      pushPresenceNow();
+      syncTopStats();
+      renderLeaderboard();
+    }
+
+    function renderShop() {
+      renderBasketShop();
+      renderStarShop();
+      renderFieldShop();
+      renderCartoonShop();
+      syncTopStats();
+      updateHintText();
+      refreshCustomBackgroundUi();
+      renderLeaderboard();
+    }
+
+    function finishGame() {
+      if (!running) return;
+      running = false;
+      updateRunInteractionLocks();
+      stopGameLoops();
+      updateDifficultyControlState();
+      resetFieldStars();
+      if (score > profile.best) profile.best = score;
+      const reward = Math.round(getRewardByScore(score) * getRewardMultiplier());
+      profile.coins += reward;
+      saveCurrentProfile();
+      renderLeaderboard();
+      overlay.classList.remove('hidden');
+      overlay.querySelector('.panel').innerHTML = `
+        <h2>Конец игры</h2>
+        <p>Твой результат: <strong>${formatNumber(score)}</strong></p>
+        <p>Сложность: <strong>${getDifficultyLevel()}</strong> • Множитель очков: <strong>x${formatNumber(getScoreMultiplier())}</strong></p>
+        <p>Награда: <strong>+${reward} монеток</strong></p>
+        <p>Всего монеток: <strong>${profile.coins}</strong></p>
+        <button id="againBtn">Играть</button>
+        <button id="toShopBtn" style="margin-top:8px;">В магазин</button>
+      `;
+      document.getElementById('againBtn').addEventListener('click', startGame, { once: true });
+      document.getElementById('toShopBtn').addEventListener('click', () => {
+        overlay.classList.add('hidden');
+        document.querySelector('.shop').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, { once: true });
+      renderShop();
+      pushPresenceNow();
+    }
+
+    function startGame() {
+      stopGameLoops();
+      running = false;
+      profile.settings.difficulty = Math.max(1, Math.min(6, Number(difficultyRange.value) || getDifficultyLevel()));
+      resetGameRound();
+      running = true;
+      updateRunInteractionLocks();
+      updateDifficultyControlState();
+      progressSaveCounter = 0;
+      overlay.classList.add('hidden');
+      setShopMessage('');
+      ensureAudioContext();
+      updateMusicState();
+      // Push "playing" status immediately for other clients.
+      saveAccountsToDatabase();
+      pushPresenceNow();
+      renderLeaderboard();
+      if (window.matchMedia('(max-width: 900px)').matches) {
+        enterFullscreenMode();
+      }
+      timerInt = setInterval(() => {
+        if (!running) return;
+        profile.playSeconds += 1;
+        handleTimedEventsByPlaytime();
+        progressSaveCounter += 1;
+        if (progressSaveCounter >= 10) {
+          progressSaveCounter = 0;
+          saveAccountsToDatabase();
+        }
+        timeLeft = Math.max(0, timeLeft - 1);
+        timeEl.textContent = timeLeft;
+        if (timeLeft === 0) finishGame();
+      }, 1000);
+      spawnerInt = setInterval(spawnStar, 440);
+    }
+
+    function buyItem(cost, onSuccess) {
+      if (profile.coins < cost) {
+        setShopMessage(`Не хватает монеток. Нужно ${cost}, у тебя ${profile.coins}.`);
+        return;
+      }
+      profile.coins -= cost;
+      onSuccess();
+      saveCurrentProfile();
+      renderShop();
+    }
+
+    function renderBasketShop() {
+      basketShopEl.innerHTML = '';
+      BASKETS.forEach((item) => {
+        const owned = profile.ownedBaskets.includes(item.id);
+        const selected = profile.activeBasket === item.id;
+        const card = document.createElement('article');
+        card.className = 'item';
+        const preview = document.createElement('div');
+        preview.className = 'basket-preview';
+        preview.style.background = `linear-gradient(180deg, ${item.grad1}, ${item.grad2})`;
+        preview.style.borderColor = item.border;
+        preview.style.borderTopColor = item.rim;
+        card.appendChild(preview);
+        const name = document.createElement('p');
+        name.className = 'item-name';
+        name.textContent = item.name;
+        card.appendChild(name);
+        const meta = document.createElement('p');
+        meta.className = 'item-meta';
+        meta.textContent = owned ? 'Куплено' : `Цена: ${item.price} мон.`;
+        card.appendChild(meta);
+        const btn = document.createElement('button');
+        if (selected) {
+          btn.textContent = 'Выбрано';
+          btn.disabled = true;
+        } else if (owned) {
+          btn.textContent = 'Выбрать';
+          btn.addEventListener('click', () => {
+            profile.activeBasket = item.id;
+            applyBasketSkin();
+            saveCurrentProfile();
+            renderShop();
+            setShopMessage(`Выбрана корзинка: ${item.name}`);
+          });
+        } else {
+          btn.textContent = `Купить (${item.price})`;
+          btn.addEventListener('click', () => {
+            buyItem(item.price, () => {
+              profile.ownedBaskets.push(item.id);
+              profile.activeBasket = item.id;
+              applyBasketSkin();
+              setShopMessage(`Покупка: ${item.name}`);
+            });
+          });
+        }
+        card.appendChild(btn);
+        basketShopEl.appendChild(card);
+      });
+    }
+
+    function renderStarShop() {
+      starShopEl.innerHTML = '';
+      STAR_SKINS.forEach((item) => {
+        const owned = profile.ownedStars.includes(item.id);
+        const selected = profile.activeStar === item.id;
+        const card = document.createElement('article');
+        card.className = 'item';
+        const preview = document.createElement('div');
+        preview.className = 'star-preview';
+        preview.textContent = `${item.normal} ${item.special}`;
+        card.appendChild(preview);
+        const name = document.createElement('p');
+        name.className = 'item-name';
+        name.textContent = item.name;
+        card.appendChild(name);
+        const meta = document.createElement('p');
+        meta.className = 'item-meta';
+        meta.textContent = owned ? 'Куплено' : `Цена: ${item.price} мон.`;
+        card.appendChild(meta);
+        const btn = document.createElement('button');
+        if (selected) {
+          btn.textContent = 'Выбрано';
+          btn.disabled = true;
+        } else if (owned) {
+          btn.textContent = 'Выбрать';
+          btn.addEventListener('click', () => {
+            profile.activeStar = item.id;
+            saveCurrentProfile();
+            renderShop();
+            setShopMessage(`Выбран скин: ${item.name}`);
+          });
+        } else {
+          btn.textContent = `Купить (${item.price})`;
+          btn.addEventListener('click', () => {
+            buyItem(item.price, () => {
+              profile.ownedStars.push(item.id);
+              profile.activeStar = item.id;
+              setShopMessage(`Покупка: ${item.name}`);
+            });
+          });
+        }
+        card.appendChild(btn);
+        starShopEl.appendChild(card);
+      });
+    }
+
+    function renderFieldShop() {
+      fieldShopEl.innerHTML = '';
+      FIELD_SKINS.forEach((item) => {
+        const owned = profile.ownedFields.includes(item.id);
+        const selected = profile.activeField === item.id;
+        const card = document.createElement('article');
+        card.className = 'item';
+        const preview = document.createElement('div');
+        preview.className = 'basket-preview';
+        preview.style.width = '100%';
+        preview.style.height = '26px';
+        preview.style.borderRadius = '10px';
+        preview.style.borderWidth = '2px';
+        preview.style.borderColor = '#c7c7c7';
+        preview.style.background = `linear-gradient(180deg, ${item.top}, ${item.mid}, ${item.bot})`;
+        card.appendChild(preview);
+        const name = document.createElement('p');
+        name.className = 'item-name';
+        name.textContent = item.name;
+        card.appendChild(name);
+        const meta = document.createElement('p');
+        meta.className = 'item-meta';
+        meta.textContent = owned ? 'Куплено' : `Цена: ${item.price} мон.`;
+        card.appendChild(meta);
+        const btn = document.createElement('button');
+        if (selected) {
+          btn.textContent = 'Выбрано';
+          btn.disabled = true;
+        } else if (owned) {
+          btn.textContent = 'Выбрать';
+          btn.addEventListener('click', () => {
+            profile.activeField = item.id;
+            applyFieldSkin();
+            saveCurrentProfile();
+            renderShop();
+            setShopMessage(`Выбрано поле: ${item.name}`);
+          });
+        } else {
+          btn.textContent = `Купить (${item.price})`;
+          btn.addEventListener('click', () => {
+            buyItem(item.price, () => {
+              profile.ownedFields.push(item.id);
+              profile.activeField = item.id;
+              applyFieldSkin();
+              setShopMessage(`Покупка: ${item.name}`);
+            });
+          });
+        }
+        card.appendChild(btn);
+        fieldShopEl.appendChild(card);
+      });
+    }
+
+    function buildEmbedPlaylistUrl(listId) {
+      const url = new URL('https://www.youtube.com/embed/videoseries');
+      url.searchParams.set('list', listId);
+      url.searchParams.set('autoplay', '1');
+      url.searchParams.set('rel', '0');
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        url.searchParams.set('origin', window.location.origin);
+      }
+      return url.toString();
+    }
+
+    function playCartoon(cartoon) {
+      playerOpenLink.href = cartoon.open || `https://www.youtube.com/playlist?list=${encodeURIComponent(cartoon.listId || '')}`;
+      cartoonPlayer.src = buildEmbedPlaylistUrl(cartoon.listId);
+      if (window.location.protocol === 'file:') {
+        playerNote.textContent = `Для встроенного плеера открой игру через localhost (http://127.0.0.1), затем включи: ${cartoon.name}`;
+      } else {
+        playerNote.textContent = `Сейчас играет: ${cartoon.name}`;
+      }
+      playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderCartoonShop() {
+      cartoonShopEl.innerHTML = '';
+      const visibleCartoons = CARTOONS.filter((item) => !profile.settings.kidOnly || item.kid);
+      if (visibleCartoons.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'item-meta';
+        empty.textContent = 'Нет мультфильмов для выбранного фильтра.';
+        cartoonShopEl.appendChild(empty);
+        return;
+      }
+      visibleCartoons.forEach((item) => {
+        const owned = profile.ownedCartoons.includes(item.id);
+        const card = document.createElement('article');
+        card.className = 'item';
+        const name = document.createElement('p');
+        name.className = 'item-name';
+        name.textContent = item.name;
+        card.appendChild(name);
+        const meta = document.createElement('p');
+        meta.className = 'item-meta';
+        meta.textContent = `${item.kid ? 'Детский' : 'Общий'} • ${owned ? 'Доступ открыт' : `Цена: ${item.price} мон.`}`;
+        card.appendChild(meta);
+        if (owned) {
+          const watchBtn = document.createElement('button');
+          watchBtn.textContent = 'Смотреть';
+          watchBtn.addEventListener('click', () => playCartoon(item));
+          card.appendChild(watchBtn);
+        } else {
+          const buyBtn = document.createElement('button');
+          buyBtn.textContent = `Купить (${item.price})`;
+          buyBtn.addEventListener('click', () => {
+            buyItem(item.price, () => {
+              profile.ownedCartoons.push(item.id);
+              setShopMessage(`Открыт мультик: ${item.name}`);
+            });
+          });
+          card.appendChild(buyBtn);
+        }
+        cartoonShopEl.appendChild(card);
+      });
+    }
+
+    function closePinModal(value) {
+      if (!pinModalResolver) return;
+      const resolve = pinModalResolver;
+      pinModalResolver = null;
+      pinModal.classList.add('hidden');
+      pinModalHint.textContent = '';
+      pinModalInput.value = '';
+      resolve(value);
+    }
+
+    function openSelfProfileModal() {
+      pendingSelfAvatarData = '';
+      selfProfileName.textContent = profile.name;
+      selfProfileMeta.textContent = `Монетки: ${profile.coins} • Рекорд: ${formatNumber(profile.best)}`;
+      const avatar = profile.avatar && profile.avatar.startsWith('data:image/') ? profile.avatar : '';
+      selfAvatarPreview.src = avatar || selfAvatarMini.src;
+      selfAutoStatusToggle.checked = profile.settings.statusAuto !== false;
+      selfManualStatusSelect.value = profile.settings.manualStatus || 'online';
+      selfManualStatusSelect.disabled = selfAutoStatusToggle.checked;
+      selfProfileModal.classList.remove('hidden');
+    }
+
+    function closeSelfProfileModal() {
+      selfProfileModal.classList.add('hidden');
+      selfAvatarInput.value = '';
+      pendingSelfAvatarData = '';
+    }
+
+    function openOtherProfileModal(row) {
+      if (!row) return;
+      const avatar = row.avatar && row.avatar.startsWith('data:image/') ? row.avatar : selfAvatarMini.src;
+      const sm = statusMeta(row.status);
+      otherAvatarPreview.src = avatar;
+      otherProfileName.textContent = row.name;
+      otherProfileStatus.innerHTML = `<span class="status-pill ${sm.cls}">${sm.text}</span>`;
+      otherProfileStats.textContent = `Рекорд: ${formatNumber(row.profileBest || row.best)} • Монетки: ${row.profileCoins || row.coins}`;
+      otherProfileModal.classList.remove('hidden');
+    }
+
+    function closeOtherProfileModal() {
+      otherProfileModal.classList.add('hidden');
+    }
+
+    async function sendLeaderboardReaction(name, vote) {
+      try {
+        await fetch(LEADERBOARD_REACT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, vote })
+        });
+      } catch {}
+      renderLeaderboard();
+    }
+
+    function openPinModal({
+      title,
+      text,
+      placeholder = 'PIN',
+      confirmText = 'Подтвердить',
+      requireValue = true
+    }) {
+      pinModalTitle.textContent = title;
+      pinModalText.textContent = text;
+      pinModalInput.placeholder = placeholder;
+      pinModalConfirmBtn.textContent = confirmText;
+      pinModalHint.textContent = '';
+      pinModalInput.value = '';
+      pinModal.classList.remove('hidden');
+      pinModal.dataset.requireValue = requireValue ? '1' : '0';
+      requestAnimationFrame(() => pinModalInput.focus());
+      return new Promise((resolve) => {
+        pinModalResolver = resolve;
+      });
+    }
+
+    async function verifyAccountPin(name) {
+      const target = accounts[name];
+      if (!target?.pin) return true;
+      const entered = await openPinModal({
+        title: `Аккаунт ${name}`,
+        text: 'Введите PIN для входа',
+        placeholder: 'PIN аккаунта'
+      });
+      if (entered === null) return null;
+      return entered === target.pin;
+    }
+
+    async function setOrChangePin() {
+      const pin = await openPinModal({
+        title: 'PIN аккаунта',
+        text: 'Введите новый PIN (4-12 символов)',
+        placeholder: 'Новый PIN',
+        confirmText: 'Сохранить'
+      });
+      if (pin === null) return;
+      if (pin.length < 4 || pin.length > 12) {
+        setShopMessage('PIN должен быть от 4 до 12 символов.');
+        return;
+      }
+      profile.pin = pin;
+      saveCurrentProfile();
+      setShopMessage('PIN сохранён.');
+    }
+
+    async function removePin() {
+      if (!profile.pin) {
+        setShopMessage('PIN уже не установлен.');
+        return;
+      }
+      const entered = await openPinModal({
+        title: 'Снятие PIN',
+        text: 'Введите текущий PIN',
+        placeholder: 'Текущий PIN',
+        confirmText: 'Снять PIN'
+      });
+      if (entered === null) return;
+      if (entered !== profile.pin) {
+        setShopMessage('Неверный PIN.');
+        return;
+      }
+      profile.pin = '';
+      saveCurrentProfile();
+      setShopMessage('PIN снят.');
+    }
+
+    async function authorizeSettingsAccess() {
+      if (!profile.pin) {
+        setShopMessage('Для настроек сначала установи PIN.');
+        return false;
+      }
+      const entered = await openPinModal({
+        title: 'Доступ к настройкам',
+        text: 'Введите PIN для изменения настроек',
+        placeholder: 'PIN',
+        confirmText: 'Открыть'
+      });
+      if (entered === null) return false;
+      if (entered !== profile.pin) {
+        setShopMessage('Неверный PIN.');
+        return false;
+      }
+      return true;
+    }
+
+    function exportCurrentAccount() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        accountName: currentAccountName,
+        profile
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `starcatch-${currentAccountName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setShopMessage('Экспорт выполнен.');
+    }
+
+    function importAccountFromFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(String(reader.result || '{}'));
+          if (!data.profile) throw new Error('bad format');
+          const imported = sanitizeProfile(data.profile, currentAccountName);
+          accounts[currentAccountName] = imported;
+          profile = imported;
+          applyTheme();
+          applyBasketSkin();
+          applyFieldSkin();
+          saveCurrentProfile();
+          renderShop();
+          setShopMessage('Импорт выполнен.');
+        } catch {
+          setShopMessage('Ошибка импорта: неверный JSON.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function finishHardStop() {
+      running = false;
+      updateRunInteractionLocks();
+      stopGameLoops();
+      updateDifficultyControlState();
+      resetFieldStars();
+      mouseHoldMove = false;
+      saveAccountsToDatabase();
+      pushPresenceNow();
+      renderLeaderboard();
+    }
+
+    async function switchAccount(name, opts = {}) {
+      if (!opts.skipPinCheck) {
+        const pinResult = await verifyAccountPin(name);
+        if (pinResult === null) {
+          setShopMessage('Вход отменён.');
+          refreshAccountSelect();
+          return;
+        }
+        if (!pinResult) {
+          setShopMessage('Неверный PIN.');
+          refreshAccountSelect();
+          return;
+        }
+      }
+      if (!accounts[name]) {
+        setShopMessage('Аккаунт не найден.');
+        refreshAccountSelect();
+        return;
+      }
+      finishHardStop();
+      currentAccountName = name;
+      profile = sanitizeProfile(accounts[name], name);
+      accounts[name] = profile;
+      applyTheme();
+      applyBasketSkin();
+      applyFieldSkin();
+      resetGameRound();
+      overlay.classList.remove('hidden');
+      overlay.querySelector('.panel').innerHTML = `
+        <h2>Привет, ${currentAccountName}!</h2>
+        <p>Аккаунт переключён.</p>
+        <button id="startBtn2">Начать игру</button>
+      `;
+      document.getElementById('startBtn2').addEventListener('click', startGame, { once: true });
+      refreshAccountSelect();
+      saveCurrentProfile();
+      pushPresenceNow();
+      renderShop();
+    }
+
+    async function renameCurrentAccount() {
+      const nextName = renameAccountInput.value.trim();
+      if (!nextName) {
+        setShopMessage('Введи новое имя аккаунта.');
+        return;
+      }
+      if (nextName === currentAccountName) {
+        setShopMessage('Это имя уже используется текущим аккаунтом.');
+        return;
+      }
+      if (accounts[nextName]) {
+        setShopMessage('Такое имя уже занято.');
+        return;
+      }
+      if (profile.pin) {
+        const pinResult = await verifyAccountPin(currentAccountName);
+        if (pinResult === null) {
+          setShopMessage('Переименование отменено.');
+          return;
+        }
+        if (!pinResult) {
+          setShopMessage('Неверный PIN.');
+          return;
+        }
+      }
+
+      const oldName = currentAccountName;
+      const renamedProfile = sanitizeProfile({ ...profile, name: nextName }, nextName);
+      delete accounts[oldName];
+      accounts[nextName] = renamedProfile;
+      currentAccountName = nextName;
+      profile = renamedProfile;
+      renameAccountInput.value = '';
+      saveCurrentProfile();
+      refreshAccountSelect();
+      renderShop();
+      setShopMessage(`Аккаунт переименован: ${oldName} -> ${nextName}`);
+    }
+
+    async function createAccount() {
+      const name = accountInput.value.trim();
+      const pin = accountPinInput.value.trim();
+      if (!name) {
+        setShopMessage('Введи имя нового аккаунта.');
+        return;
+      }
+      if (pin && (pin.length < 4 || pin.length > 12)) {
+        setShopMessage('PIN должен быть от 4 до 12 символов.');
+        return;
+      }
+      if (accounts[name]) {
+        setShopMessage('Такой аккаунт уже есть.');
+        return;
+      }
+      accounts[name] = defaultProfile(name);
+      accounts[name].pin = pin;
+      accountInput.value = '';
+      accountPinInput.value = '';
+      await switchAccount(name, { skipPinCheck: true });
+      setShopMessage(`Создан аккаунт: ${name}`);
+    }
+
+    async function deleteCurrentAccount() {
+      const names = Object.keys(accounts);
+      if (names.length <= 1) {
+        setShopMessage('Нельзя удалить последний аккаунт.');
+        return;
+      }
+      const target = currentAccountName;
+      delete accounts[target];
+      try {
+        await fetch(DELETE_ACCOUNT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: target })
+        });
+      } catch {}
+      await switchAccount(Object.keys(accounts)[0], { skipPinCheck: true });
+      renderLeaderboard();
+      setShopMessage(`Аккаунт ${target} удалён.`);
+    }
+
+    async function resetCurrentProgress() {
+      const keepSettings = { ...profile.settings };
+      accounts[currentAccountName] = { ...defaultProfile(currentAccountName), settings: keepSettings };
+      await switchAccount(currentAccountName, { skipPinCheck: true });
+      setShopMessage('Прогресс аккаунта стёрт.');
+    }
+
+    function initThemeOptions() {
+      themeModeSelect.value = profile?.settings?.themeMode === 'dark' ? 'dark' : 'light';
+      renderThemeVariants(themeModeSelect.value, profile?.settings?.theme || 'pink');
+    }
+
+    function saveSettingsFromInputs() {
+      profile.settings.themeMode = themeModeSelect.value === 'dark' ? 'dark' : 'light';
+      profile.settings.theme = themeSelect.value;
+      profile.settings.accent = accentPicker.value;
+      profile.settings.kidOnly = kidFilterToggle.checked;
+      profile.settings.difficulty = Math.max(1, Math.min(6, Number(difficultyRange.value) || 1));
+      profile.settings.musicEnabled = Boolean(musicToggle.checked);
+      profile.settings.musicVolume = Math.max(0, Math.min(100, Number(musicVolumeRange.value) || 0));
+      applyTheme();
+      applyDifficultyVisuals();
+      updateMusicState();
+      saveCurrentProfile();
+      renderCartoonShop();
+      setShopMessage('Настройки темы сохранены.');
+    }
+
+    function uploadCustomBackgroundFromFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        setShopMessage('Можно загрузить только изображение.');
+        return;
+      }
+      if (file.size > 4 * 1024 * 1024) {
+        setShopMessage('Файл слишком большой. Лимит: 4 МБ.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        if (!dataUrl.startsWith('data:image/')) {
+          setShopMessage('Не удалось прочитать изображение.');
+          return;
+        }
+        buyItem(100, () => {
+          profile.customFieldBackground = dataUrl;
+          applyFieldSkin();
+          setShopMessage('Свой фон установлен (-100 монет).');
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function wireEvents() {
+      startBtn.addEventListener('click', startGame);
+      restartBtn.addEventListener('click', startGame);
+      fullscreenBtn.addEventListener('click', toggleFullscreenMode);
+      exitFullscreenBtn.addEventListener('click', async () => {
+        if (document.fullscreenElement === field && document.exitFullscreen) {
+          try {
+            await document.exitFullscreen();
+          } catch {}
+          updateFullscreenBtnLabel();
+        }
+      });
+      selfProfileBtn.addEventListener('click', openSelfProfileModal);
+      field.addEventListener('mousedown', (e) => {
+        if (!running || e.button !== 0) return;
+        mouseHoldMove = true;
+        const rect = field.getBoundingClientRect();
+        setBasket(e.clientX - rect.left - basket.offsetWidth / 2);
+      });
+      window.addEventListener('mouseup', () => { mouseHoldMove = false; });
+      field.addEventListener('mouseleave', () => { mouseHoldMove = false; });
+      field.addEventListener('mousemove', (e) => {
+        if (!running || !mouseHoldMove || (e.buttons & 1) !== 1) return;
+        const rect = field.getBoundingClientRect();
+        setBasket(e.clientX - rect.left - basket.offsetWidth / 2);
+      });
+      field.addEventListener('touchmove', (e) => {
+        if (!running) return;
+        const rect = field.getBoundingClientRect();
+        setBasket(e.touches[0].clientX - rect.left - basket.offsetWidth / 2);
+      }, { passive: true });
+      window.addEventListener('keydown', (e) => {
+        if (!running) return;
+        if (e.key === 'ArrowLeft') setBasket(basketX - 30);
+        if (e.key === 'ArrowRight') setBasket(basketX + 30);
+      });
+      window.addEventListener('touchmove', (e) => {
+        if (running) e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('fullscreenchange', updateFullscreenBtnLabel);
+      createAccountBtn.addEventListener('click', createAccount);
+      renameAccountBtn.addEventListener('click', renameCurrentAccount);
+      deleteAccountBtn.addEventListener('click', deleteCurrentAccount);
+      accountSelect.addEventListener('change', async () => { await switchAccount(accountSelect.value); });
+      leaderboardBody.addEventListener('click', (e) => {
+        const voteBtn = e.target.closest('button[data-vote]');
+        if (voteBtn) {
+          const name = voteBtn.dataset.name || '';
+          const vote = voteBtn.dataset.vote || '';
+          if (name) sendLeaderboardReaction(name, vote);
+          return;
+        }
+        const nameBtn = e.target.closest('button[data-name]');
+        if (nameBtn) {
+          const name = nameBtn.dataset.name || '';
+          if (name === currentAccountName) return;
+          const row = leaderboardRowsCache.find((x) => x.name === name);
+          if (row) openOtherProfileModal(row);
+        }
+      });
+      themeModeSelect.addEventListener('change', () => {
+        const mode = themeModeSelect.value === 'dark' ? 'dark' : 'light';
+        renderThemeVariants(mode, themeSelect.value);
+      });
+      saveThemeBtn.addEventListener('click', async () => {
+        if (!(await authorizeSettingsAccess())) return;
+        saveSettingsFromInputs();
+      });
+      setPinBtn.addEventListener('click', setOrChangePin);
+      removePinBtn.addEventListener('click', removePin);
+      exportBtn.addEventListener('click', async () => {
+        if (!(await authorizeSettingsAccess())) return;
+        exportCurrentAccount();
+      });
+      importBtn.addEventListener('click', async () => {
+        if (!(await authorizeSettingsAccess())) return;
+        importFileInput.click();
+      });
+      importFileInput.addEventListener('change', (e) => {
+        importAccountFromFile(e.target.files && e.target.files[0]);
+        importFileInput.value = '';
+      });
+      uploadBgBtn.addEventListener('click', () => customBgFileInput.click());
+      customBgFileInput.addEventListener('change', (e) => {
+        uploadCustomBackgroundFromFile(e.target.files && e.target.files[0]);
+        customBgFileInput.value = '';
+      });
+      clearBgBtn.addEventListener('click', () => {
+        if (!profile.customFieldBackground) return;
+        profile.customFieldBackground = '';
+        applyFieldSkin();
+        saveCurrentProfile();
+        renderShop();
+        setShopMessage('Свой фон убран.');
+      });
+      kidFilterToggle.addEventListener('change', async () => {
+        const nextValue = kidFilterToggle.checked;
+        if (!(await authorizeSettingsAccess())) {
+          kidFilterToggle.checked = !nextValue;
+          return;
+        }
+        profile.settings.kidOnly = nextValue;
+        saveCurrentProfile();
+        renderCartoonShop();
+      });
+      resetProgressBtn.addEventListener('click', async () => {
+        if (!(await authorizeSettingsAccess())) return;
+        await resetCurrentProgress();
+      });
+
+      pinModalCancelBtn.addEventListener('click', () => closePinModal(null));
+      pinModalConfirmBtn.addEventListener('click', () => {
+        const value = pinModalInput.value.trim();
+        const requireValue = pinModal.dataset.requireValue === '1';
+        if (requireValue && !value) {
+          pinModalHint.textContent = 'Введите PIN.';
+          pinModalInput.focus();
+          return;
+        }
+        closePinModal(value);
+      });
+      pinModal.addEventListener('click', (e) => {
+        if (e.target === pinModal) closePinModal(null);
+      });
+      pinModalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') pinModalConfirmBtn.click();
+        if (e.key === 'Escape') closePinModal(null);
+      });
+      selfAutoStatusToggle.addEventListener('change', () => {
+        selfManualStatusSelect.disabled = selfAutoStatusToggle.checked;
+      });
+      selfAvatarInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = String(reader.result || '');
+          if (!dataUrl.startsWith('data:image/')) return;
+          pendingSelfAvatarData = dataUrl;
+          selfAvatarPreview.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      });
+      selfProfileSaveBtn.addEventListener('click', () => {
+        if (pendingSelfAvatarData) profile.avatar = pendingSelfAvatarData;
+        profile.settings.statusAuto = selfAutoStatusToggle.checked;
+        profile.settings.manualStatus = selfManualStatusSelect.value;
+        saveCurrentProfile();
+        closeSelfProfileModal();
+      });
+      selfProfileCloseBtn.addEventListener('click', closeSelfProfileModal);
+      selfProfileModal.addEventListener('click', (e) => {
+        if (e.target === selfProfileModal) closeSelfProfileModal();
+      });
+      otherProfileCloseBtn.addEventListener('click', closeOtherProfileModal);
+      otherProfileModal.addEventListener('click', (e) => {
+        if (e.target === otherProfileModal) closeOtherProfileModal();
+      });
+      difficultyRange.addEventListener('input', () => {
+        const d = Math.max(1, Math.min(6, Number(difficultyRange.value) || 1));
+        difficultyLabel.textContent = String(d);
+      });
+      musicVolumeRange.addEventListener('input', () => {
+        ensureMusicPlayer();
+        bgMusic.volume = Math.max(0, Math.min(1, (Number(musicVolumeRange.value) || 0) / 100));
+      });
+      musicToggle.addEventListener('change', () => {
+        profile.settings.musicEnabled = Boolean(musicToggle.checked);
+        updateMusicState();
+      });
+
+      // Music should play while user is on the site (autoplay may require interaction).
+      const tryStartMusic = () => {
+        ensureAudioContext();
+        updateMusicState();
+      };
+      document.addEventListener('pointerdown', tryStartMusic, { passive: true });
+      window.addEventListener('pagehide', () => {
+        pushPresenceNow();
+      });
+    }
+
+    async function init() {
+      await loadDatabaseState();
+      initThemeOptions();
+      loadAccountsFromDatabase();
+      refreshAccountSelect();
+      applyTheme();
+      applyBasketSkin();
+      applyFieldSkin();
+      resetGameRound();
+      updateDifficultyControlState();
+      updateRunInteractionLocks();
+      updateFullscreenBtnLabel();
+      updateHintText();
+      refreshCustomBackgroundUi();
+      renderShop();
+      wireEvents();
+      updateMusicState();
+      startPresenceHeartbeat();
+      pushPresenceNow();
+      startLeaderboardPolling();
+    }
+
+    init();
+  </script>
+</body>
+</html>

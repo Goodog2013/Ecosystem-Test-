@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAN Messenger</title>
+  <link rel="icon" type="image/x-icon" href="./m.ico" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-theme="light">
+  <div class="page-bg" aria-hidden="true"></div>
+
+  <div id="ipGate" class="ip-gate hidden" role="dialog" aria-modal="true" aria-labelledby="ipGateTitle">
+    <section class="ip-gate-card">
+      <h2 id="ipGateTitle">Регистрация нового устройства</h2>
+      <p class="muted">
+        Обнаружен новый IP в LAN. Для доступа зарегистрируйте профиль.
+      </p>
+      <p id="ipGateMeta" class="muted"></p>
+
+      <label class="label top-gap" for="ipGateLoginInput">Логин</label>
+      <input id="ipGateLoginInput" class="input" type="text" maxlength="24" placeholder="Например: Goodog2013" />
+
+      <label class="label top-gap" for="ipGatePasswordInput">Пароль</label>
+      <input id="ipGatePasswordInput" class="input" type="password" maxlength="64" placeholder="Минимум 4 символа" />
+
+      <div class="row top-gap">
+        <button id="ipGateRegisterBtn" class="button" type="button">Зарегистрироваться</button>
+      </div>
+      <p id="ipGateHint" class="muted top-gap"></p>
+    </section>
+  </div>
+
+  <div class="top-controls">
+    <button id="settingsBtn" class="icon-btn" type="button" aria-label="Настройки">&#9881;</button>
+    <button id="profileBtn" class="profile-btn" type="button" aria-label="Профиль">
+      <img id="profileBtnAvatar" class="profile-avatar" alt="Avatar" />
+      <span id="profileBtnName">Профиль</span>
+    </button>
+  </div>
+
+  <div id="settingsPopup" class="popup hidden" role="dialog" aria-modal="false">
+    <h3 class="popup-title">Настройки</h3>
+    <label class="label label-inline" for="themeSelect">Тема</label>
+    <select id="themeSelect" class="input">
+      <option value="light">Светлая</option>
+      <option value="mint">Мятная</option>
+      <option value="night">Ночная</option>
+    </select>
+
+    <label class="label label-inline top-gap" for="accentInput">Акцент</label>
+    <div class="row">
+      <input id="accentInput" class="input color-input" type="color" value="#ef6a3a" />
+      <button id="resetAccentBtn" class="button ghost" type="button">Сброс</button>
+    </div>
+  </div>
+
+  <div id="profilePopup" class="popup hidden" role="dialog" aria-modal="false">
+    <h3 class="popup-title">Профиль</h3>
+    <div class="profile-head">
+      <img id="profilePreviewAvatar" class="profile-avatar profile-avatar-lg" alt="Avatar" />
+      <div>
+        <p id="profileCurrentName" class="profile-name">Не выполнен вход</p>
+        <p id="profileCurrentHint" class="muted">Войдите или создайте профиль.</p>
+      </div>
+    </div>
+
+    <section class="popup-section">
+      <label class="label label-inline" for="authLoginInput">Логин</label>
+      <input id="authLoginInput" class="input" type="text" maxlength="24" placeholder="Например: Goodog2013" />
+
+      <label class="label label-inline top-gap" for="authPasswordInput">Пароль</label>
+      <input id="authPasswordInput" class="input" type="password" maxlength="64" placeholder="Введите пароль" />
+
+      <div class="row top-gap">
+        <button id="loginBtn" class="button" type="button">Войти</button>
+        <button id="registerBtn" class="button ghost" type="button">Создать</button>
+      </div>
+    </section>
+
+    <section id="profileManageSection" class="popup-section hidden">
+      <label class="label label-inline" for="newPasswordInput">Новый пароль</label>
+      <div class="row">
+        <input id="newPasswordInput" class="input" type="password" maxlength="64" placeholder="Минимум 4 символа" />
+        <button id="savePasswordBtn" class="button ghost" type="button">Сохранить</button>
+      </div>
+
+      <label class="label label-inline top-gap" for="avatarFileInput">Аватар</label>
+      <input id="avatarFileInput" class="input" type="file" accept="image/*" />
+
+      <div class="row top-gap">
+        <button id="removeAvatarBtn" class="button ghost" type="button">Убрать аватар</button>
+        <button id="logoutBtn" class="button ghost" type="button">Выйти</button>
+      </div>
+
+      <div class="row top-gap">
+        <button id="deleteProfileBtn" class="button danger" type="button">Удалить профиль</button>
+      </div>
+    </section>
+
+    <p id="profilePopupHint" class="muted top-gap"></p>
+  </div>
+
+  <div id="conversationPopup" class="popup hidden" role="dialog" aria-modal="false">
+    <h3 id="conversationPopupTitle" class="popup-title">Настройки чата</h3>
+
+    <label class="label label-inline" for="convTitleInput">Название</label>
+    <input id="convTitleInput" class="input" type="text" maxlength="40" placeholder="Например: Squad" />
+
+    <label class="label label-inline top-gap" for="convDescInput">Описание</label>
+    <textarea id="convDescInput" class="input" rows="3" maxlength="220" placeholder="Короткое описание"></textarea>
+
+    <label class="label label-inline top-gap checkbox-line" for="convPrivateInput">
+      <input id="convPrivateInput" type="checkbox" />
+      Приватный чат
+    </label>
+
+    <label id="convAllowPostsWrap" class="label label-inline top-gap checkbox-line" for="convAllowPostsInput">
+      <input id="convAllowPostsInput" type="checkbox" />
+      Разрешить писать всем участникам
+    </label>
+
+    <div class="row top-gap">
+      <button id="convSaveBtn" class="button" type="button">Сохранить</button>
+    </div>
+    <p id="convPopupHint" class="muted top-gap"></p>
+  </div>
+
+  <div id="botPopup" class="popup hidden" role="dialog" aria-modal="false">
+    <h3 class="popup-title">Создать Python-бота</h3>
+
+    <label class="label label-inline" for="botNameInput">Имя бота</label>
+    <input id="botNameInput" class="input" type="text" maxlength="24" placeholder="Например: EchoBot" />
+
+    <label class="label label-inline top-gap" for="botTargetSelect">Куда писать</label>
+    <select id="botTargetSelect" class="input"></select>
+
+    <label class="label label-inline top-gap" for="botTriggerInput">Триггер</label>
+    <input id="botTriggerInput" class="input" type="text" maxlength="60" placeholder="Например: !help" />
+
+    <label class="label label-inline top-gap" for="botReplyInput">Ответ</label>
+    <textarea id="botReplyInput" class="input" rows="3" maxlength="300" placeholder="Текст ответа бота"></textarea>
+
+    <div class="row top-gap">
+      <button id="botCreateBtn" class="button" type="button">Создать</button>
+    </div>
+    <p id="botPopupHint" class="muted top-gap"></p>
+  </div>
+
+  <main class="layout">
+    <aside class="panel rooms-panel">
+      <header class="panel-title">
+        <h1>LAN Messenger</h1>
+        <p class="muted">Локальный чат по сети</p>
+      </header>
+
+      <section class="block">
+        <label class="label" for="roomInput">Начать чат</label>
+        <div class="row">
+          <input id="roomInput" class="input" type="text" maxlength="32" placeholder="username" />
+          <button id="joinRoomBtn" class="button" type="button">Найти</button>
+        </div>
+        <div class="row top-gap">
+          <button id="newGroupBtn" class="button ghost" type="button">Новая группа</button>
+          <button id="newChannelBtn" class="button ghost" type="button">Новый канал</button>
+        </div>
+        <div class="row top-gap">
+          <button id="roomSettingsBtn" class="button ghost" type="button">Настройки чата</button>
+          <button id="newBotBtn" class="button ghost" type="button">Python-бот</button>
+        </div>
+        <p id="botInfoLabel" class="muted top-gap"></p>
+      </section>
+
+      <section class="block">
+        <p class="label">Комнаты</p>
+        <div id="roomsList" class="rooms-list"></div>
+      </section>
+
+      <section class="block compact">
+        <p class="muted" id="apiLabel"></p>
+      </section>
+    </aside>
+
+    <section class="panel chat-panel">
+      <header class="chat-header">
+        <div class="chat-header-main">
+          <img id="chatAvatar" class="profile-avatar" alt="Avatar" />
+          <div>
+            <h2 id="currentRoomLabel">Выберите username</h2>
+            <p class="muted" id="chatUserLabel">Профиль: гость</p>
+          </div>
+        </div>
+        <div class="chat-header-side">
+          <p class="muted" id="onlineLabel">Онлайн: 0</p>
+          <div class="chat-tools">
+            <button id="callAudioBtn" class="button ghost mini" type="button">Звонок</button>
+            <button id="callVideoBtn" class="button ghost mini" type="button">Видео</button>
+            <button id="groupCallBtn" class="button ghost mini" type="button">Группа</button>
+            <button id="streamBtn" class="button ghost mini" type="button">Стрим</button>
+            <button id="endCallBtn" class="button danger mini hidden" type="button">Стоп</button>
+          </div>
+          <div id="statusBadge" class="status status-offline">Оффлайн</div>
+        </div>
+      </header>
+
+      <section id="rtcPanel" class="rtc-panel hidden">
+        <p id="rtcStatusLabel" class="muted">Медиа-сессия не активна.</p>
+        <div id="rtcVideos" class="rtc-videos"></div>
+      </section>
+
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <form id="composerForm" class="composer">
+        <textarea
+          id="messageInput"
+          class="input composer-input"
+          maxlength="1200"
+          placeholder="Напишите сообщение... Enter - отправить, Shift+Enter - новая строка"
+          required
+        ></textarea>
+        <div class="composer-actions">
+          <button id="attachBtn" class="button ghost mini" type="button" aria-label="Attach file">Файл</button>
+          <button id="recordAudioBtn" class="button ghost mini" type="button" aria-label="Record audio">Голос</button>
+          <button id="recordVideoNoteBtn" class="button ghost mini" type="button" aria-label="Record video note">Кружок</button>
+          <button id="emojiBtn" class="button ghost emoji-button" type="button" aria-label="Emoji">&#128522;</button>
+          <button id="sendBtn" class="button send-button" type="submit">Отправить</button>
+        </div>
+        <div id="emojiPanel" class="emoji-panel hidden" aria-label="Emoji panel"></div>
+        <input id="fileInput" type="file" class="hidden-input" />
+        <p id="composerHint" class="muted composer-hint"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
